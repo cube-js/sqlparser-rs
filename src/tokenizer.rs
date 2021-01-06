@@ -394,19 +394,31 @@ impl<'a> Tokenizer<'a> {
                         )
                     }
                 }
-                // numbers and period
-                '0'..='9' | '.' => {
-                    let mut s = peeking_take_while(chars, |ch| matches!(ch, '0'..='9'));
-                    // match one period
-                    if let Some('.') = chars.peek() {
-                        s.push('.');
-                        chars.next();
-                    }
-                    s += &peeking_take_while(chars, |ch| matches!(ch, '0'..='9'));
-
-                    // No number -> Token::Period
-                    if s == "." {
-                        return Ok(Some(Token::Period));
+                // numbers and period.
+                // note that CubeStore fork does not parse '.0123' as float.
+                '.' => self.consume_and_return(chars, Token::Period),
+                '0'..='9' => {
+                    // TODO: https://jakewheat.github.io/sql-overview/sql-2011-foundation-grammar.html#unsigned-numeric-literal
+                    let mut s = peeking_take_while(chars, |ch| matches!(ch, '0'..='9' | '.'));
+                    match chars.peek() {
+                        Some('e') | Some('E') => {
+                            s.push(chars.next().unwrap());
+                            let sign = chars.next();
+                            match sign {
+                                Some('+') | Some('-') => {
+                                    s.push(sign.unwrap());
+                                    let exp =
+                                        peeking_take_while(chars, |ch| matches!(ch, '0'..='9'));
+                                    s += exp.as_str();
+                                }
+                                v => {
+                                    return self.tokenizer_error(
+                                        format!("Expected exp sign but found '{:?}'", v).as_str(),
+                                    );
+                                }
+                            }
+                        }
+                        _ => {}
                     }
 
                     let long = if chars.peek() == Some(&'L') {
@@ -707,6 +719,25 @@ mod tests {
             Token::make_word("sqrt", None),
             Token::LParen,
             Token::Number(String::from("1"), false),
+            Token::RParen,
+        ];
+
+        compare(expected, tokens);
+    }
+
+    #[test]
+    fn tokenize_exp_number() {
+        let sql = String::from("SELECT sqrt(1.53e-10)");
+        let dialect = GenericDialect {};
+        let mut tokenizer = Tokenizer::new(&dialect, &sql);
+        let tokens = tokenizer.tokenize().unwrap();
+
+        let expected = vec![
+            Token::make_keyword("SELECT"),
+            Token::Whitespace(Whitespace::Space),
+            Token::make_word("sqrt", None),
+            Token::LParen,
+            Token::Number(String::from("1.53e-10")),
             Token::RParen,
         ];
 
