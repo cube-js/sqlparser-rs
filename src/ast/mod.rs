@@ -1585,6 +1585,7 @@ impl fmt::Display for TransactionIsolationLevel {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ShowStatementFilter {
     Like(String),
+    ILike(String),
     Where(Expr),
 }
 
@@ -1593,6 +1594,7 @@ impl fmt::Display for ShowStatementFilter {
         use ShowStatementFilter::*;
         match self {
             Like(pattern) => write!(f, "LIKE '{}'", value::escape_single_quote_string(pattern)),
+            ILike(pattern) => write!(f, "ILIKE {}", value::escape_single_quote_string(pattern)),
             Where(expr) => write!(f, "WHERE {}", expr),
         }
     }

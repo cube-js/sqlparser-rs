@@ -237,6 +237,7 @@ define_keywords!(
     IDENTITY,
     IF,
     IGNORE,
+    ILIKE,
     IN,
     INDEX,
     INDICATOR,
