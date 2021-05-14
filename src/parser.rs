@@ -1470,6 +1470,15 @@ impl<'a> Parser<'a> {
         or_replace: bool,
         temporary: bool,
     ) -> Result<Statement, ParserError> {
+        self.parse_create_table_ext(or_replace, temporary, true)
+    }
+
+    pub fn parse_create_table_ext(
+        &mut self,
+        or_replace: bool,
+        temporary: bool,
+        enable_hive_extensions: bool,
+    ) -> Result<Statement, ParserError> {
         let if_not_exists = self.parse_keywords(&[Keyword::IF, Keyword::NOT, Keyword::EXISTS]);
         let table_name = self.parse_object_name()?;
         let like = if self.parse_keyword(Keyword::LIKE) {
@@ -1483,8 +1492,15 @@ impl<'a> Parser<'a> {
         // SQLite supports `WITHOUT ROWID` at the end of `CREATE TABLE`
         let without_rowid = self.parse_keywords(&[Keyword::WITHOUT, Keyword::ROWID]);
 
-        let hive_distribution = self.parse_hive_distribution()?;
-        let hive_formats = self.parse_hive_formats()?;
+        let hive_distribution;
+        let hive_formats;
+        if enable_hive_extensions {
+            hive_distribution = self.parse_hive_distribution()?;
+            hive_formats = self.parse_hive_formats()?;
+        } else {
+            hive_distribution = HiveDistributionStyle::NONE;
+            hive_formats = Default::default();
+        }
         // PostgreSQL supports `WITH ( options )`, before `AS`
         let with_options = self.parse_options(Keyword::WITH)?;
         let table_properties = self.parse_options(Keyword::TBLPROPERTIES)?;
