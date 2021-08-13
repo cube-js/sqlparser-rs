@@ -362,6 +362,7 @@ impl<'a> Parser<'a> {
                     op: UnaryOperator::Not,
                     expr: Box::new(self.parse_subexpr(Self::UNARY_NOT_PREC)?),
                 }),
+                Keyword::ROLLING => self.parse_rolling_expr(),
                 // Here `w` is a word, check if it's a part of a multi-part
                 // identifier, a function call, or a simple identifier:
                 _ => match self.peek_token() {
@@ -705,6 +706,24 @@ impl<'a> Parser<'a> {
             on_overflow,
             within_group,
         }))
+    }
+
+    pub fn parse_rolling_expr(&mut self) -> Result<Expr, ParserError> {
+        self.expect_token(&Token::LParen)?;
+
+        let agg_expr = self.parse_subexpr(0)?;
+
+        self.expect_keyword(Keyword::RANGE)?;
+        self.prev_token();
+        let frame = self.parse_window_frame()?;
+
+        self.expect_token(&Token::RParen)?;
+
+        Ok(Expr::Rolling {
+            agg: Box::new(agg_expr),
+            first_bound: frame.start_bound,
+            second_bound: frame.end_bound,
+        })
     }
 
     // This function parses date/time fields for both the EXTRACT function-like
@@ -2420,6 +2439,15 @@ impl<'a> Parser<'a> {
             None
         };
 
+        let rolling_window = if self.parse_keywords(&[Keyword::ROLLING_WINDOW]) {
+            println!("ok");
+            let r = Some(self.parse_rolling_window()?);
+            println!("parsed {:?}", r);
+            r
+        } else {
+            None
+        };
+
         Ok(Select {
             distinct,
             top,
@@ -2432,6 +2460,35 @@ impl<'a> Parser<'a> {
             distribute_by,
             sort_by,
             having,
+            rolling_window,
+        })
+    }
+
+    pub fn parse_rolling_window(&mut self) -> Result<RollingWindow, ParserError> {
+        self.expect_keyword(Keyword::DIMENSION)?;
+        let dimension = self.parse_object_name()?;
+
+        let partition_by = if self.parse_keywords(&[Keyword::PARTITION, Keyword::BY]) {
+            self.parse_comma_separated(Parser::parse_object_name)?
+        } else {
+            vec![]
+        };
+
+        self.expect_keyword(Keyword::FROM)?;
+        let from = self.parse_expr()?;
+
+        self.expect_keyword(Keyword::TO)?;
+        let to = self.parse_expr()?;
+
+        self.expect_keyword(Keyword::EVERY)?;
+        let every = self.parse_expr()?;
+
+        Ok(RollingWindow {
+            dimension,
+            partition_by,
+            from,
+            to,
+            every,
         })
     }
 

@@ -13,6 +13,7 @@
 use super::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 /// The most complete variant of a `SELECT` query expression, optionally
 /// including `WITH`, `UNION` / other set operations, and `ORDER BY`.
@@ -116,6 +117,29 @@ impl fmt::Display for SetOperator {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct RollingWindow {
+    pub dimension: ObjectName,
+    pub partition_by: Vec<ObjectName>,
+    pub from: Expr,
+    pub to: Expr,
+    pub every: Expr,
+}
+
+impl Display for RollingWindow {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "DIMENSION {}", self.dimension)?;
+        if !self.partition_by.is_empty() {
+            write!(
+                f,
+                " PARTITION BY {}",
+                super::display_comma_separated(&self.partition_by)
+            )?;
+        }
+        write!(f, " FROM {} TO {} EVERY {}", self.from, self.to, self.every)
+    }
+}
+
 /// A restricted variant of `SELECT` (without CTEs/`ORDER BY`), which may
 /// appear either as the only body item of an `SQLQuery`, or as an operand
 /// to a set operation like `UNION`.
@@ -143,6 +167,8 @@ pub struct Select {
     pub sort_by: Vec<Expr>,
     /// HAVING
     pub having: Option<Expr>,
+    /// CubeStore extension: ROLLING WINDOW
+    pub rolling_window: Option<RollingWindow>,
 }
 
 impl fmt::Display for Select {
@@ -185,6 +211,9 @@ impl fmt::Display for Select {
         }
         if let Some(ref having) = self.having {
             write!(f, " HAVING {}", having)?;
+        }
+        if let Some(ref rolling_window) = self.rolling_window {
+            write!(f, " ROLLING_WINDOW {}", rolling_window)?;
         }
         Ok(())
     }

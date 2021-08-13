@@ -176,6 +176,7 @@ define_keywords!(
     DESC,
     DESCRIBE,
     DETERMINISTIC,
+    DIMENSION, // CubeStore extension: ROLLING window.
     DIRECTORY,
     DISCONNECT,
     DISTINCT,
@@ -381,6 +382,8 @@ define_keywords!(
     REVOKE,
     RIGHT,
     ROLLBACK,
+    ROLLING,        // CubeStore extension
+    ROLLING_WINDOW, // CubeStore extension
     ROLLUP,
     ROW,
     ROWID,
@@ -507,6 +510,7 @@ pub const RESERVED_FOR_TABLE_ALIAS: &[Keyword] = &[
     Keyword::GROUP,
     Keyword::SORT,
     Keyword::HAVING,
+    Keyword::ROLLING_WINDOW,
     Keyword::ORDER,
     Keyword::TOP,
     Keyword::LATERAL,

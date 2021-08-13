@@ -3366,6 +3366,95 @@ fn all_keywords_sorted() {
     assert_eq!(copy, ALL_KEYWORDS)
 }
 
+#[test]
+fn parse_rolling_window() {
+    let s = verified_only_select(
+        "SELECT * FROM Data ROLLING_WINDOW DIMENSION id FROM 0 TO 100 EVERY 1",
+    );
+    assert_eq!(
+        s.rolling_window,
+        Some(RollingWindow {
+            dimension: ObjectName(vec!["id".into()]),
+            partition_by: vec![],
+            from: Expr::Value(Value::Number(0i64.to_string(), false)),
+            to: Expr::Value(Value::Number(100i64.to_string(), false)),
+            every: Expr::Value(Value::Number(1i64.to_string(), false)),
+        })
+    );
+
+    // Used in CubeStore, make sure this parses ok. Note that the interval semantics are completely
+    // different from the intended
+    let s = verified_only_select(
+        "SELECT * FROM Data ROLLING_WINDOW DIMENSION id FROM '2021-01-01T00:00:00Z' TO '2021-12-31T23:59:59Z' EVERY INTERVAL '7 day'",
+    );
+    assert_eq!(
+        s.rolling_window,
+        Some(RollingWindow {
+            dimension: ObjectName(vec!["id".into()]),
+            partition_by: vec![],
+            from: Expr::Value(Value::SingleQuotedString(
+                "2021-01-01T00:00:00Z".to_string()
+            )),
+            to: Expr::Value(Value::SingleQuotedString(
+                "2021-12-31T23:59:59Z".to_string()
+            )),
+            every: Expr::Value(Value::Interval {
+                value: "7 day".to_string(),
+                leading_field: None,
+                leading_precision: None,
+                last_field: None,
+                fractional_seconds_precision: None
+            }),
+        })
+    );
+
+    // Check rolling expressions.
+    let e = verified_expr("ROLLING(SUM() RANGE 7 PRECEDING)");
+    assert_eq!(
+        e,
+        Expr::Rolling {
+            agg: Box::new(Expr::Function(Function {
+                name: ObjectName(vec!["SUM".into()]),
+                args: vec![],
+                over: None,
+                distinct: false
+            })),
+            first_bound: WindowFrameBound::Preceding(Some(7)),
+            second_bound: None
+        }
+    );
+
+    let e = verified_expr("ROLLING(SUM() RANGE 7 FOLLOWING)");
+    assert_eq!(
+        e,
+        Expr::Rolling {
+            agg: Box::new(Expr::Function(Function {
+                name: ObjectName(vec!["SUM".into()]),
+                args: vec![],
+                over: None,
+                distinct: false
+            })),
+            first_bound: WindowFrameBound::Following(Some(7)),
+            second_bound: None
+        }
+    );
+
+    let e = verified_expr("ROLLING(SUM() RANGE BETWEEN CURRENT ROW AND 7 FOLLOWING)");
+    assert_eq!(
+        e,
+        Expr::Rolling {
+            agg: Box::new(Expr::Function(Function {
+                name: ObjectName(vec!["SUM".into()]),
+                args: vec![],
+                over: None,
+                distinct: false
+            })),
+            first_bound: WindowFrameBound::CurrentRow,
+            second_bound: Some(WindowFrameBound::Following(Some(7))),
+        }
+    );
+}
+
 fn parse_sql_statements(sql: &str) -> Result<Vec<Statement>, ParserError> {
     all_dialects().parse_sql_statements(sql)
 }

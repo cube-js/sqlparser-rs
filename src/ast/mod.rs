@@ -30,8 +30,8 @@ pub use self::ddl::{
 pub use self::operator::{BinaryOperator, UnaryOperator};
 pub use self::query::{
     Cte, Fetch, Join, JoinConstraint, JoinOperator, LateralView, Offset, OffsetRows, OrderByExpr,
-    Query, Select, SelectItem, SetExpr, SetOperator, TableAlias, TableFactor, TableWithJoins, Top,
-    Values, With,
+    Query, RollingWindow, Select, SelectItem, SetExpr, SetOperator, TableAlias, TableFactor,
+    TableWithJoins, Top, Values, With,
 };
 pub use self::value::{DateTimeField, Value};
 
@@ -259,6 +259,12 @@ pub enum Expr {
     Subquery(Box<Query>),
     /// The `LISTAGG` function `SELECT LISTAGG(...) WITHIN GROUP (ORDER BY ...)`
     ListAgg(ListAgg),
+    /// CubeStore extension: ROLLING(SUM(X) RANGE 7 PRECEDING 10 FOLLOWING)
+    Rolling {
+        agg: Box<Expr>,
+        first_bound: WindowFrameBound,
+        second_bound: Option<WindowFrameBound>,
+    },
 }
 
 impl fmt::Display for Expr {
@@ -360,6 +366,19 @@ impl fmt::Display for Expr {
                     write!(f, " FOR {}", from_part)?;
                 }
 
+                write!(f, ")")
+            }
+            Expr::Rolling {
+                agg,
+                first_bound,
+                second_bound,
+            } => {
+                write!(f, "ROLLING({} RANGE", agg)?;
+                if let Some(second_bound) = second_bound {
+                    write!(f, " BETWEEN {} AND {}", first_bound, second_bound)?;
+                } else {
+                    write!(f, " {}", first_bound)?;
+                }
                 write!(f, ")")
             }
         }
