@@ -3419,7 +3419,7 @@ fn parse_rolling_window() {
                 over: None,
                 distinct: false
             })),
-            first_bound: WindowFrameBound::Preceding(Some(7)),
+            first_bound: WindowFrameBound::Preceding(Some(Value::Number("7".into(), false))),
             second_bound: None
         }
     );
@@ -3434,7 +3434,7 @@ fn parse_rolling_window() {
                 over: None,
                 distinct: false
             })),
-            first_bound: WindowFrameBound::Following(Some(7)),
+            first_bound: WindowFrameBound::Following(Some(Value::Number("7".into(), false))),
             second_bound: None
         }
     );
@@ -3450,7 +3450,10 @@ fn parse_rolling_window() {
                 distinct: false
             })),
             first_bound: WindowFrameBound::CurrentRow,
-            second_bound: Some(WindowFrameBound::Following(Some(7))),
+            second_bound: Some(WindowFrameBound::Following(Some(Value::Number(
+                "7".into(),
+                false
+            )))),
         }
     );
 }

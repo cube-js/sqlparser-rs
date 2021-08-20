@@ -328,7 +328,7 @@ impl<'a> Parser<'a> {
         // expression that should parse as the column name "date".
         return_ok_if_some!(self.maybe_parse(|parser| {
             match parser.parse_data_type()? {
-                DataType::Interval => parser.parse_literal_interval(),
+                DataType::Interval => Ok(Expr::Value(parser.parse_literal_interval()?)),
                 // PosgreSQL allows almost any identifier to be used as custom data type name,
                 // and we support that in `parse_data_type()`. But unlike Postgres we don't
                 // have a list of globally reserved keywords (since they vary across dialects),
@@ -356,7 +356,7 @@ impl<'a> Parser<'a> {
                 Keyword::EXISTS => self.parse_exists_expr(),
                 Keyword::EXTRACT => self.parse_extract_expr(),
                 Keyword::SUBSTRING => self.parse_substring_expr(),
-                Keyword::INTERVAL => self.parse_literal_interval(),
+                Keyword::INTERVAL => Ok(Expr::Value(self.parse_literal_interval()?)),
                 Keyword::LISTAGG => self.parse_listagg_expr(),
                 Keyword::NOT => Ok(Expr::UnaryOp {
                     op: UnaryOperator::Not,
@@ -538,7 +538,11 @@ impl<'a> Parser<'a> {
             let rows = if self.parse_keyword(Keyword::UNBOUNDED) {
                 None
             } else {
-                Some(self.parse_literal_uint()?)
+                if self.parse_keyword(Keyword::INTERVAL) {
+                    Some(self.parse_literal_interval()?)
+                } else {
+                    Some(self.parse_value()?)
+                }
             };
             if self.parse_keyword(Keyword::PRECEDING) {
                 Ok(WindowFrameBound::Preceding(rows))
@@ -757,7 +761,7 @@ impl<'a> Parser<'a> {
     ///   6. `INTERVAL '1:1' HOUR (5) TO MINUTE (5)`
     ///
     /// Note that we do not currently attempt to parse the quoted value.
-    pub fn parse_literal_interval(&mut self) -> Result<Expr, ParserError> {
+    pub fn parse_literal_interval(&mut self) -> Result<Value, ParserError> {
         // The SQL standard allows an optional sign before the value string, but
         // it is not clear if any implementations support that syntax, so we
         // don't currently try to parse it. (The sign can instead be included
@@ -815,13 +819,13 @@ impl<'a> Parser<'a> {
                 }
             };
 
-        Ok(Expr::Value(Value::Interval {
+        Ok(Value::Interval {
             value,
             leading_field,
             leading_precision,
             last_field,
             fractional_seconds_precision: fsec_precision,
-        }))
+        })
     }
 
     /// Parse an operator following an expression
