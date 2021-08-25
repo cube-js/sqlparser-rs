@@ -1747,6 +1747,7 @@ fn parse_scalar_function_in_projection() {
 fn run_explain_analyze(query: &str, expected_verbose: bool, expected_analyze: bool) {
     match verified_stmt(query) {
         Statement::Explain {
+            describe_alias: _,
             analyze,
             verbose,
             statement,
@@ -1761,6 +1762,9 @@ fn run_explain_analyze(query: &str, expected_verbose: bool, expected_analyze: bo
 
 #[test]
 fn parse_explain_analyze_with_simple_select() {
+    // Describe is an alias for EXPLAIN
+    run_explain_analyze("DESCRIBE SELECT sqrt(id) FROM foo", false, false);
+
     run_explain_analyze("EXPLAIN SELECT sqrt(id) FROM foo", false, false);
     run_explain_analyze("EXPLAIN VERBOSE SELECT sqrt(id) FROM foo", true, false);
     run_explain_analyze("EXPLAIN ANALYZE SELECT sqrt(id) FROM foo", false, true);
