@@ -2444,10 +2444,7 @@ impl<'a> Parser<'a> {
         };
 
         let rolling_window = if self.parse_keywords(&[Keyword::ROLLING_WINDOW]) {
-            println!("ok");
-            let r = Some(self.parse_rolling_window()?);
-            println!("parsed {:?}", r);
-            r
+            Some(self.parse_rolling_window()?)
         } else {
             None
         };
