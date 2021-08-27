@@ -121,6 +121,7 @@ impl fmt::Display for SetOperator {
 pub struct RollingWindow {
     pub dimension: ObjectName,
     pub partition_by: Vec<ObjectName>,
+    pub group_by_dimension: Option<Expr>,
     pub from: Expr,
     pub to: Expr,
     pub every: Expr,
@@ -135,6 +136,9 @@ impl Display for RollingWindow {
                 " PARTITION BY {}",
                 super::display_comma_separated(&self.partition_by)
             )?;
+        }
+        if let Some(d) = &self.group_by_dimension {
+            write!(f, " GROUP BY DIMENSION {}", d)?;
         }
         write!(f, " FROM {} TO {} EVERY {}", self.from, self.to, self.every)
     }

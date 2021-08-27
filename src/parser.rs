@@ -2475,6 +2475,13 @@ impl<'a> Parser<'a> {
             vec![]
         };
 
+        let group_by_dimension =
+            if self.parse_keywords(&[Keyword::GROUP, Keyword::BY, Keyword::DIMENSION]) {
+                Some(self.parse_expr()?)
+            } else {
+                None
+            };
+
         self.expect_keyword(Keyword::FROM)?;
         let from = self.parse_expr()?;
 
@@ -2487,6 +2494,7 @@ impl<'a> Parser<'a> {
         Ok(RollingWindow {
             dimension,
             partition_by,
+            group_by_dimension,
             from,
             to,
             every,

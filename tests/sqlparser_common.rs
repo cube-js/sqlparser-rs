@@ -3376,6 +3376,22 @@ fn parse_rolling_window() {
         Some(RollingWindow {
             dimension: ObjectName(vec!["id".into()]),
             partition_by: vec![],
+            group_by_dimension: None,
+            from: Expr::Value(Value::Number(0i64.to_string(), false)),
+            to: Expr::Value(Value::Number(100i64.to_string(), false)),
+            every: Expr::Value(Value::Number(1i64.to_string(), false)),
+        })
+    );
+
+    let s = verified_only_select(
+        "SELECT * FROM Data ROLLING_WINDOW DIMENSION id GROUP BY DIMENSION 193 FROM 0 TO 100 EVERY 1",
+    );
+    assert_eq!(
+        s.rolling_window,
+        Some(RollingWindow {
+            dimension: ObjectName(vec!["id".into()]),
+            partition_by: vec![],
+            group_by_dimension: Some(Expr::Value(Value::Number("193".into(), false))),
             from: Expr::Value(Value::Number(0i64.to_string(), false)),
             to: Expr::Value(Value::Number(100i64.to_string(), false)),
             every: Expr::Value(Value::Number(1i64.to_string(), false)),
@@ -3383,7 +3399,7 @@ fn parse_rolling_window() {
     );
 
     // Used in CubeStore, make sure this parses ok. Note that the interval semantics are completely
-    // different from the intended
+    // different from the standard definition.
     let s = verified_only_select(
         "SELECT * FROM Data ROLLING_WINDOW DIMENSION id FROM '2021-01-01T00:00:00Z' TO '2021-12-31T23:59:59Z' EVERY INTERVAL '7 day'",
     );
@@ -3392,6 +3408,7 @@ fn parse_rolling_window() {
         Some(RollingWindow {
             dimension: ObjectName(vec!["id".into()]),
             partition_by: vec![],
+            group_by_dimension: None,
             from: Expr::Value(Value::SingleQuotedString(
                 "2021-01-01T00:00:00Z".to_string()
             )),
