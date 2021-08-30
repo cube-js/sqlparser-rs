@@ -721,12 +721,25 @@ impl<'a> Parser<'a> {
         self.prev_token();
         let frame = self.parse_window_frame()?;
 
+        let offset = match self.parse_keyword(Keyword::OFFSET) {
+            false => None,
+            true => {
+                let k = self.expect_one_of_keywords(&[Keyword::START, Keyword::END])?;
+                if k == Keyword::START {
+                    Some(RollingOffset::Start)
+                } else {
+                    Some(RollingOffset::End)
+                }
+            }
+        };
+
         self.expect_token(&Token::RParen)?;
 
         Ok(Expr::Rolling {
             agg: Box::new(agg_expr),
             first_bound: frame.start_bound,
             second_bound: frame.end_bound,
+            offset,
         })
     }
 

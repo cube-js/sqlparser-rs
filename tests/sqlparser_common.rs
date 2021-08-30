@@ -3425,19 +3425,21 @@ fn parse_rolling_window() {
         })
     );
 
+    let sum = Box::new(Expr::Function(Function {
+        name: ObjectName(vec!["SUM".into()]),
+        args: vec![],
+        over: None,
+        distinct: false,
+    }));
     // Check rolling expressions.
     let e = verified_expr("ROLLING(SUM() RANGE 7 PRECEDING)");
     assert_eq!(
         e,
         Expr::Rolling {
-            agg: Box::new(Expr::Function(Function {
-                name: ObjectName(vec!["SUM".into()]),
-                args: vec![],
-                over: None,
-                distinct: false
-            })),
+            agg: sum.clone(),
             first_bound: WindowFrameBound::Preceding(Some(Value::Number("7".into(), false))),
-            second_bound: None
+            second_bound: None,
+            offset: None,
         }
     );
 
@@ -3445,14 +3447,10 @@ fn parse_rolling_window() {
     assert_eq!(
         e,
         Expr::Rolling {
-            agg: Box::new(Expr::Function(Function {
-                name: ObjectName(vec!["SUM".into()]),
-                args: vec![],
-                over: None,
-                distinct: false
-            })),
+            agg: sum.clone(),
             first_bound: WindowFrameBound::Following(Some(Value::Number("7".into(), false))),
-            second_bound: None
+            second_bound: None,
+            offset: None,
         }
     );
 
@@ -3460,17 +3458,47 @@ fn parse_rolling_window() {
     assert_eq!(
         e,
         Expr::Rolling {
-            agg: Box::new(Expr::Function(Function {
-                name: ObjectName(vec!["SUM".into()]),
-                args: vec![],
-                over: None,
-                distinct: false
-            })),
+            agg: sum.clone(),
             first_bound: WindowFrameBound::CurrentRow,
             second_bound: Some(WindowFrameBound::Following(Some(Value::Number(
                 "7".into(),
                 false
             )))),
+            offset: None,
+        }
+    );
+
+    // Check offsets.
+    let e = verified_expr("ROLLING(SUM() RANGE CURRENT ROW OFFSET START)");
+    assert_eq!(
+        e,
+        Expr::Rolling {
+            agg: sum.clone(),
+            first_bound: WindowFrameBound::CurrentRow,
+            second_bound: None,
+            offset: Some(RollingOffset::Start),
+        }
+    );
+
+    let e = verified_expr("ROLLING(SUM() RANGE CURRENT ROW OFFSET END)");
+    assert_eq!(
+        e,
+        Expr::Rolling {
+            agg: sum.clone(),
+            first_bound: WindowFrameBound::CurrentRow,
+            second_bound: None,
+            offset: Some(RollingOffset::End),
+        }
+    );
+
+    let e = verified_expr("ROLLING(SUM() RANGE BETWEEN 7 PRECEDING AND CURRENT ROW OFFSET END)");
+    assert_eq!(
+        e,
+        Expr::Rolling {
+            agg: sum.clone(),
+            first_bound: WindowFrameBound::Preceding(Some(Value::Number("7".into(), false))),
+            second_bound: Some(WindowFrameBound::CurrentRow),
+            offset: Some(RollingOffset::End),
         }
     );
 }

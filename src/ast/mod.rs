@@ -264,7 +264,23 @@ pub enum Expr {
         agg: Box<Expr>,
         first_bound: WindowFrameBound,
         second_bound: Option<WindowFrameBound>,
+        offset: Option<RollingOffset>,
     },
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum RollingOffset {
+    Start,
+    End,
+}
+
+impl fmt::Display for RollingOffset {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(match self {
+            RollingOffset::Start => "START",
+            RollingOffset::End => "END",
+        })
+    }
 }
 
 impl fmt::Display for Expr {
@@ -372,12 +388,16 @@ impl fmt::Display for Expr {
                 agg,
                 first_bound,
                 second_bound,
+                offset,
             } => {
                 write!(f, "ROLLING({} RANGE", agg)?;
                 if let Some(second_bound) = second_bound {
                     write!(f, " BETWEEN {} AND {}", first_bound, second_bound)?;
                 } else {
                     write!(f, " {}", first_bound)?;
+                }
+                if let Some(offset) = offset {
+                    write!(f, " OFFSET {}", offset)?;
                 }
                 write!(f, ")")
             }
