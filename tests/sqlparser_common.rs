@@ -2461,12 +2461,42 @@ fn parse_literal_timestamp() {
 }
 
 #[test]
+fn parse_expr_interval() {
+    let sql = "SELECT INTERVAL HOUR(order_date) HOUR";
+    let select = verified_only_select(sql);
+
+    let value = Expr::Function(Function {
+        name: ObjectName(vec![Ident {
+            value: "HOUR".to_string(),
+            quote_style: None,
+        }]),
+        args: vec![FunctionArg::Unnamed(Expr::Identifier(Ident {
+            value: "order_date".to_string(),
+            quote_style: None,
+        }))],
+        over: None,
+        distinct: false,
+    });
+
+    assert_eq!(
+        &Expr::Value(Value::Interval {
+            value: Box::new(value),
+            leading_field: Some(DateTimeField::Hour),
+            leading_precision: None,
+            last_field: None,
+            fractional_seconds_precision: None,
+        }),
+        expr_from_projection(only(&select.projection)),
+    );
+}
+
+#[test]
 fn parse_literal_interval() {
     let sql = "SELECT INTERVAL '1-1' YEAR TO MONTH";
     let select = verified_only_select(sql);
     assert_eq!(
         &Expr::Value(Value::Interval {
-            value: "1-1".into(),
+            value: Box::new(Expr::Value(Value::SingleQuotedString("1-1".to_string()))),
             leading_field: Some(DateTimeField::Year),
             leading_precision: None,
             last_field: Some(DateTimeField::Month),
@@ -2479,7 +2509,9 @@ fn parse_literal_interval() {
     let select = verified_only_select(sql);
     assert_eq!(
         &Expr::Value(Value::Interval {
-            value: "01:01.01".into(),
+            value: Box::new(Expr::Value(Value::SingleQuotedString(
+                "01:01.01".to_string()
+            ))),
             leading_field: Some(DateTimeField::Minute),
             leading_precision: Some(5),
             last_field: Some(DateTimeField::Second),
@@ -2492,7 +2524,7 @@ fn parse_literal_interval() {
     let select = verified_only_select(sql);
     assert_eq!(
         &Expr::Value(Value::Interval {
-            value: "1".into(),
+            value: Box::new(Expr::Value(Value::SingleQuotedString("1".to_string()))),
             leading_field: Some(DateTimeField::Second),
             leading_precision: Some(5),
             last_field: None,
@@ -2505,7 +2537,7 @@ fn parse_literal_interval() {
     let select = verified_only_select(sql);
     assert_eq!(
         &Expr::Value(Value::Interval {
-            value: "10".into(),
+            value: Box::new(Expr::Value(Value::SingleQuotedString("10".to_string()))),
             leading_field: Some(DateTimeField::Hour),
             leading_precision: None,
             last_field: None,
@@ -2518,7 +2550,7 @@ fn parse_literal_interval() {
     let select = verified_only_select(sql);
     assert_eq!(
         &Expr::Value(Value::Interval {
-            value: "10".into(),
+            value: Box::new(Expr::Value(Value::SingleQuotedString("10".to_string()))),
             leading_field: Some(DateTimeField::Hour),
             leading_precision: Some(1),
             last_field: None,
@@ -2531,7 +2563,7 @@ fn parse_literal_interval() {
     let select = verified_only_select(sql);
     assert_eq!(
         &Expr::Value(Value::Interval {
-            value: "1 DAY".into(),
+            value: Box::new(Expr::Value(Value::SingleQuotedString("1 DAY".to_string()))),
             leading_field: None,
             leading_precision: None,
             last_field: None,
