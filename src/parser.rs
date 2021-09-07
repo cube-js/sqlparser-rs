@@ -962,7 +962,7 @@ impl<'a> Parser<'a> {
 
         // The first token in an interval is a string literal which specifies
         // the duration of the interval.
-        let value = self.parse_literal_string()?;
+        let value = self.parse_expr()?;
 
         // Following the string literal is a qualifier which indicates the units
         // of the duration specified in the string literal.
@@ -1029,7 +1029,7 @@ impl<'a> Parser<'a> {
             };
 
         Ok(Expr::Value(Value::Interval {
-            value,
+            value: Box::new(value),
             leading_field,
             leading_precision,
             last_field,
