@@ -2462,32 +2462,62 @@ fn parse_literal_timestamp() {
 
 #[test]
 fn parse_expr_interval() {
-    let sql = "SELECT INTERVAL HOUR(order_date) HOUR";
-    let select = verified_only_select(sql);
+    {
+        let sql = "SELECT INTERVAL HOUR(order_date) HOUR";
+        let select = verified_only_select(sql);
 
-    let value = Expr::Function(Function {
-        name: ObjectName(vec![Ident {
-            value: "HOUR".to_string(),
-            quote_style: None,
-        }]),
-        args: vec![FunctionArg::Unnamed(Expr::Identifier(Ident {
-            value: "order_date".to_string(),
-            quote_style: None,
-        }))],
-        over: None,
-        distinct: false,
-    });
+        let value = Expr::Function(Function {
+            name: ObjectName(vec![Ident {
+                value: "HOUR".to_string(),
+                quote_style: None,
+            }]),
+            args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::Identifier(Ident {
+                value: "order_date".to_string(),
+                quote_style: None,
+            })))],
+            over: None,
+            distinct: false,
+        });
 
-    assert_eq!(
-        &Expr::Value(Value::Interval {
-            value: Box::new(value),
-            leading_field: Some(DateTimeField::Hour),
-            leading_precision: None,
-            last_field: None,
-            fractional_seconds_precision: None,
-        }),
-        expr_from_projection(only(&select.projection)),
-    );
+        assert_eq!(
+            &Expr::Value(Value::Interval {
+                value: Box::new(value),
+                leading_field: Some(DateTimeField::Hour),
+                leading_precision: None,
+                last_field: None,
+                fractional_seconds_precision: None,
+            }),
+            expr_from_projection(only(&select.projection)),
+        );
+    }
+
+    {
+        let sql = "SELECT INTERVAL QUARTER(order_date) QUARTER";
+        let select = verified_only_select(sql);
+
+        let value = Expr::Function(Function {
+            name: ObjectName(vec![Ident {
+                value: "QUARTER".to_string(),
+                quote_style: None,
+            }]),
+            args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::Identifier(Ident {
+                value: "order_date".to_string(),
+                quote_style: None,
+            })))],
+            over: None,
+            distinct: false,
+        });
+        assert_eq!(
+            &Expr::Value(Value::Interval {
+                value: Box::new(value),
+                leading_field: Some(DateTimeField::Quarter),
+                leading_precision: None,
+                last_field: None,
+                fractional_seconds_precision: None,
+            }),
+            expr_from_projection(only(&select.projection)),
+        );
+    }
 }
 
 #[test]
