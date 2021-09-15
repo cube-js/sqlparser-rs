@@ -768,6 +768,8 @@ impl<'a> Parser<'a> {
                 Keyword::HOUR => Ok(DateTimeField::Hour),
                 Keyword::MINUTE => Ok(DateTimeField::Minute),
                 Keyword::SECOND => Ok(DateTimeField::Second),
+                //
+                Keyword::QUARTER => Ok(DateTimeField::Quarter),
                 _ => self.expected("date/time field", Token::Word(w))?,
             },
             unexpected => self.expected("date/time field", unexpected),
@@ -810,6 +812,8 @@ impl<'a> Parser<'a> {
                     Keyword::HOUR,
                     Keyword::MINUTE,
                     Keyword::SECOND,
+                    // Non standart invervals
+                    Keyword::QUARTER,
                 ]
                 .iter()
                 .any(|d| kw.keyword == *d) =>

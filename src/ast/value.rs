@@ -121,12 +121,15 @@ impl fmt::Display for Value {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DateTimeField {
+    // Standart
     Year,
     Month,
     Day,
     Hour,
     Minute,
     Second,
+    // Non standart
+    Quarter,
 }
 
 impl fmt::Display for DateTimeField {
@@ -138,6 +141,7 @@ impl fmt::Display for DateTimeField {
             DateTimeField::Hour => "HOUR",
             DateTimeField::Minute => "MINUTE",
             DateTimeField::Second => "SECOND",
+            DateTimeField::Quarter => "QUARTER",
         })
     }
 }
