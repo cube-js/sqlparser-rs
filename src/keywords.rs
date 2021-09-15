@@ -350,6 +350,7 @@ define_keywords!(
     PRIMARY,
     PROCEDURE,
     PURGE,
+    QUARTER,
     RANGE,
     RANK,
     RCFILE,
