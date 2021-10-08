@@ -1267,6 +1267,8 @@ impl<'a> Parser<'a> {
             self.parse_create_virtual_table()
         } else if self.parse_keyword(Keyword::SCHEMA) {
             self.parse_create_schema()
+        } else if self.parse_keywords(&[Keyword::PARTITIONED, Keyword::INDEX]) {
+            self.parse_create_partitioned_index()
         } else {
             self.expected("an object type after CREATE", self.peek_token())
         }
@@ -1430,6 +1432,19 @@ impl<'a> Parser<'a> {
             names,
             cascade,
             purge,
+        })
+    }
+
+    pub fn parse_create_partitioned_index(&mut self) -> Result<Statement, ParserError> {
+        let if_not_exists = self.parse_keywords(&[Keyword::IF, Keyword::NOT, Keyword::EXISTS]);
+        let name = self.parse_object_name()?;
+        self.expect_token(&Token::LParen)?;
+        let columns = self.parse_comma_separated(Parser::parse_column_def)?;
+        self.expect_token(&Token::RParen)?;
+        Ok(Statement::CreatePartitionedIndex {
+            name,
+            columns,
+            if_not_exists,
         })
     }
 
