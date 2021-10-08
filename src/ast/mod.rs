@@ -651,6 +651,12 @@ pub enum Statement {
         unique: bool,
         if_not_exists: bool,
     },
+    // CubeStore extension.
+    CreatePartitionedIndex {
+        name: ObjectName,
+        columns: Vec<ColumnDef>,
+        if_not_exists: bool,
+    },
     /// ALTER TABLE
     AlterTable {
         /// Table name
@@ -1275,6 +1281,19 @@ impl fmt::Display for Statement {
                     write!(f, "({}) ", display_comma_separated(data_types))?;
                 }
                 write!(f, "AS {}", statement)
+            }
+            Statement::CreatePartitionedIndex {
+                name,
+                columns,
+                if_not_exists,
+            } => {
+                write!(
+                    f,
+                    "CREATE PARTITIONED INDEX{} {}({})",
+                    if *if_not_exists { " IF NOT EXISTS" } else { "" },
+                    name,
+                    display_comma_separated(&columns)
+                )
             }
         }
     }
