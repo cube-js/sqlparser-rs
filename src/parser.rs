@@ -1413,8 +1413,13 @@ impl<'a> Parser<'a> {
             ObjectType::Index
         } else if self.parse_keyword(Keyword::SCHEMA) {
             ObjectType::Schema
+        } else if self.parse_keywords(&[Keyword::PARTITIONED, Keyword::INDEX]) {
+            ObjectType::PartitionedIndex
         } else {
-            return self.expected("TABLE, VIEW, INDEX or SCHEMA after DROP", self.peek_token());
+            return self.expected(
+                "TABLE, VIEW, INDEX, PARTITIONED INDEX or SCHEMA after DROP",
+                self.peek_token(),
+            );
         };
         // Many dialects support the non standard `IF EXISTS` clause and allow
         // specifying multiple objects to delete in a single statement

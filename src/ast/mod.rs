@@ -1464,6 +1464,8 @@ pub enum ObjectType {
     View,
     Index,
     Schema,
+    // CubeStore extension.
+    PartitionedIndex,
 }
 
 impl fmt::Display for ObjectType {
@@ -1473,6 +1475,7 @@ impl fmt::Display for ObjectType {
             ObjectType::View => "VIEW",
             ObjectType::Index => "INDEX",
             ObjectType::Schema => "SCHEMA",
+            ObjectType::PartitionedIndex => "PARTITIONED INDEX",
         })
     }
 }
