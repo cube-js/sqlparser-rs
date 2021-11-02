@@ -1342,6 +1342,18 @@ fn parse_drop_schema() {
 }
 
 #[test]
+fn parse_drop_partitioned_index() {
+    let sql = "DROP PARTITIONED INDEX X";
+
+    match verified_stmt(sql) {
+        Statement::Drop { object_type, .. } => {
+            assert_eq!(object_type, ObjectType::PartitionedIndex)
+        }
+        _ => unreachable!(),
+    }
+}
+
+#[test]
 fn parse_create_table_as() {
     let sql = "CREATE TABLE t AS SELECT * FROM a";
 
