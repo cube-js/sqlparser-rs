@@ -118,6 +118,7 @@ impl fmt::Display for SetOperator {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RollingWindow {
     pub dimension: ObjectName,
     pub partition_by: Vec<ObjectName>,

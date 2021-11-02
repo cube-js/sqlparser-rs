@@ -3422,9 +3422,9 @@ fn parse_rolling_window() {
             dimension: ObjectName(vec!["id".into()]),
             partition_by: vec![],
             group_by_dimension: None,
-            from: Expr::Value(Value::Number(0i64.to_string(), false)),
-            to: Expr::Value(Value::Number(100i64.to_string(), false)),
-            every: Expr::Value(Value::Number(1i64.to_string(), false)),
+            from: Expr::Value(number("0")),
+            to: Expr::Value(number("100")),
+            every: Expr::Value(number("1")),
         })
     );
 
@@ -3436,10 +3436,10 @@ fn parse_rolling_window() {
         Some(RollingWindow {
             dimension: ObjectName(vec!["id".into()]),
             partition_by: vec![],
-            group_by_dimension: Some(Expr::Value(Value::Number("193".into(), false))),
-            from: Expr::Value(Value::Number(0i64.to_string(), false)),
-            to: Expr::Value(Value::Number(100i64.to_string(), false)),
-            every: Expr::Value(Value::Number(1i64.to_string(), false)),
+            group_by_dimension: Some(Expr::Value(number("193"))),
+            from: Expr::Value(number("0")),
+            to: Expr::Value(number("100")),
+            every: Expr::Value(number("1")),
         })
     );
 
@@ -3482,7 +3482,7 @@ fn parse_rolling_window() {
         e,
         Expr::Rolling {
             agg: sum.clone(),
-            first_bound: WindowFrameBound::Preceding(Some(Value::Number("7".into(), false))),
+            first_bound: WindowFrameBound::Preceding(Some(number("7"))),
             second_bound: None,
             offset: None,
         }
@@ -3493,7 +3493,7 @@ fn parse_rolling_window() {
         e,
         Expr::Rolling {
             agg: sum.clone(),
-            first_bound: WindowFrameBound::Following(Some(Value::Number("7".into(), false))),
+            first_bound: WindowFrameBound::Following(Some(number("7"))),
             second_bound: None,
             offset: None,
         }
@@ -3505,10 +3505,7 @@ fn parse_rolling_window() {
         Expr::Rolling {
             agg: sum.clone(),
             first_bound: WindowFrameBound::CurrentRow,
-            second_bound: Some(WindowFrameBound::Following(Some(Value::Number(
-                "7".into(),
-                false
-            )))),
+            second_bound: Some(WindowFrameBound::Following(Some(number("7")))),
             offset: None,
         }
     );
@@ -3541,7 +3538,7 @@ fn parse_rolling_window() {
         e,
         Expr::Rolling {
             agg: sum.clone(),
-            first_bound: WindowFrameBound::Preceding(Some(Value::Number("7".into(), false))),
+            first_bound: WindowFrameBound::Preceding(Some(number("7"))),
             second_bound: Some(WindowFrameBound::CurrentRow),
             offset: Some(RollingOffset::End),
         }

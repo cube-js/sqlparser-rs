@@ -269,6 +269,7 @@ pub enum Expr {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RollingOffset {
     Start,
     End,
