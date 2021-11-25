@@ -2975,8 +2975,21 @@ impl<'a> Parser<'a> {
         if let Some(Keyword::HIVEVAR) = modifier {
             self.expect_token(&Token::Colon)?;
         }
+
         let variable = self.parse_identifier()?;
-        if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
+        if variable.value.eq_ignore_ascii_case("NAMES") {
+            let charset_name = self.parse_literal_string()?;
+            let collation_name = if self.parse_one_of_keywords(&[Keyword::COLLATE]).is_some() {
+                Some(self.parse_literal_string()?)
+            } else {
+                None
+            };
+
+            return Ok(Statement::SetNames {
+                charset_name,
+                collation_name,
+            });
+        } else if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
             let mut values = vec![];
             loop {
                 let token = self.peek_token();
