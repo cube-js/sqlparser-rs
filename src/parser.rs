@@ -2541,8 +2541,12 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_set(&mut self) -> Result<Statement, ParserError> {
-        let modifier =
-            self.parse_one_of_keywords(&[Keyword::SESSION, Keyword::LOCAL, Keyword::HIVEVAR]);
+        let modifier = self.parse_one_of_keywords(&[
+            Keyword::GLOBAL,
+            Keyword::SESSION,
+            Keyword::LOCAL,
+            Keyword::HIVEVAR,
+        ]);
         if let Some(Keyword::HIVEVAR) = modifier {
             self.expect_token(&Token::Colon)?;
         }
@@ -2556,10 +2560,10 @@ impl<'a> Parser<'a> {
                 None
             };
 
-            return Ok(Statement::SetNames {
+            Ok(Statement::SetNames {
                 charset_name,
                 collation_name,
-            });
+            })
         } else if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
             let mut values = vec![];
             loop {
@@ -2580,8 +2584,17 @@ impl<'a> Parser<'a> {
                     value: values,
                 });
             }
-        } else if variable.value == "TRANSACTION" && modifier.is_none() {
+        } else if variable.value.eq_ignore_ascii_case("TRANSACTION") {
+            let global = if modifier == Some(Keyword::GLOBAL) {
+                Some(true)
+            } else if modifier == Some(Keyword::SESSION) {
+                Some(false)
+            } else {
+                None
+            };
+
             Ok(Statement::SetTransaction {
+                global,
                 modes: self.parse_transaction_modes()?,
             })
         } else {
@@ -3158,6 +3171,7 @@ impl<'a> Parser<'a> {
     pub fn parse_transaction_modes(&mut self) -> Result<Vec<TransactionMode>, ParserError> {
         let mut modes = vec![];
         let mut required = false;
+
         loop {
             let mode = if self.parse_keywords(&[Keyword::ISOLATION, Keyword::LEVEL]) {
                 let iso_level = if self.parse_keywords(&[Keyword::READ, Keyword::UNCOMMITTED]) {

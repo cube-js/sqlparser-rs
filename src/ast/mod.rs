@@ -749,7 +749,13 @@ pub enum Statement {
     /// `{ BEGIN [ TRANSACTION | WORK ] | START TRANSACTION } ...`
     StartTransaction { modes: Vec<TransactionMode> },
     /// `SET TRANSACTION ...`
-    SetTransaction { modes: Vec<TransactionMode> },
+    SetTransaction {
+        // None - not set
+        // True - GLOBAL
+        // False - SESSION
+        global: Option<bool>,
+        modes: Vec<TransactionMode>,
+    },
     /// `COMMIT [ TRANSACTION | WORK ] [ AND [ NO ] CHAIN ]`
     Commit { chain: bool },
     /// `ROLLBACK [ TRANSACTION | WORK ] [ AND [ NO ] CHAIN ]`
@@ -1323,8 +1329,19 @@ impl fmt::Display for Statement {
                 }
                 Ok(())
             }
-            Statement::SetTransaction { modes } => {
-                write!(f, "SET TRANSACTION")?;
+            Statement::SetTransaction { global, modes } => {
+                write!(f, "SET ")?;
+
+                if let Some(is_global) = global {
+                    if *is_global {
+                        write!(f, "GLOBAL ")?;
+                    } else {
+                        write!(f, "SESSION ")?;
+                    };
+                };
+
+                write!(f, "TRANSACTION")?;
+
                 if !modes.is_empty() {
                     write!(f, " {}", display_comma_separated(modes))?;
                 }

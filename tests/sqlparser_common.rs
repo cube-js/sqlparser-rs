@@ -3539,14 +3539,46 @@ fn parse_set_transaction() {
     // TRANSACTION, so no need to duplicate the tests here. We just do a quick
     // sanity check.
     match verified_stmt("SET TRANSACTION READ ONLY, READ WRITE, ISOLATION LEVEL SERIALIZABLE") {
-        Statement::SetTransaction { modes } => assert_eq!(
-            modes,
-            vec![
-                TransactionMode::AccessMode(TransactionAccessMode::ReadOnly),
-                TransactionMode::AccessMode(TransactionAccessMode::ReadWrite),
-                TransactionMode::IsolationLevel(TransactionIsolationLevel::Serializable),
-            ]
-        ),
+        Statement::SetTransaction { modes, global } => {
+            assert_eq!(
+                modes,
+                vec![
+                    TransactionMode::AccessMode(TransactionAccessMode::ReadOnly),
+                    TransactionMode::AccessMode(TransactionAccessMode::ReadWrite),
+                    TransactionMode::IsolationLevel(TransactionIsolationLevel::Serializable),
+                ]
+            );
+
+            assert_eq!(global, None);
+        }
+        _ => unreachable!(),
+    };
+
+    match verified_stmt("SET SESSION TRANSACTION READ WRITE") {
+        Statement::SetTransaction { modes, global } => {
+            assert_eq!(
+                modes,
+                vec![TransactionMode::AccessMode(
+                    TransactionAccessMode::ReadWrite
+                ),]
+            );
+
+            assert_eq!(global, Some(false));
+        }
+        _ => unreachable!(),
+    };
+
+    match verified_stmt("SET GLOBAL TRANSACTION READ WRITE") {
+        Statement::SetTransaction { modes, global } => {
+            assert_eq!(
+                modes,
+                vec![TransactionMode::AccessMode(
+                    TransactionAccessMode::ReadWrite
+                ),]
+            );
+
+            assert_eq!(global, Some(true));
+        }
         _ => unreachable!(),
     }
 }
