@@ -853,7 +853,8 @@ fn test_transaction_statement() {
         Statement::SetTransaction {
             modes: vec![],
             snapshot: Some(Value::SingleQuotedString(String::from("000003A1-1"))),
-            session: false
+            global: None,
+            characteristics_as: false,
         }
     );
     let statement = pg().verified_stmt("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY, READ WRITE, ISOLATION LEVEL SERIALIZABLE");
@@ -866,7 +867,8 @@ fn test_transaction_statement() {
                 TransactionMode::IsolationLevel(TransactionIsolationLevel::Serializable),
             ],
             snapshot: None,
-            session: true
+            global: Some(false),
+            characteristics_as: true,
         }
     );
 }

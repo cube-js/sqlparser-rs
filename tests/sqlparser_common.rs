@@ -3947,8 +3947,9 @@ fn parse_set_transaction() {
     match verified_stmt("SET TRANSACTION READ ONLY, READ WRITE, ISOLATION LEVEL SERIALIZABLE") {
         Statement::SetTransaction {
             modes,
-            session,
+            global,
             snapshot,
+            characteristics_as,
         } => {
             assert_eq!(
                 modes,
@@ -3958,8 +3959,51 @@ fn parse_set_transaction() {
                     TransactionMode::IsolationLevel(TransactionIsolationLevel::Serializable),
                 ]
             );
-            assert!(!session);
+            assert_eq!(global, None);
             assert_eq!(snapshot, None);
+            assert!(!characteristics_as);
+        }
+        _ => unreachable!(),
+    };
+
+    match verified_stmt("SET SESSION TRANSACTION READ WRITE") {
+        Statement::SetTransaction {
+            modes,
+            global,
+            snapshot,
+            characteristics_as,
+        } => {
+            assert_eq!(
+                modes,
+                vec![TransactionMode::AccessMode(
+                    TransactionAccessMode::ReadWrite
+                ),]
+            );
+
+            assert_eq!(global, Some(false));
+            assert_eq!(snapshot, None);
+            assert!(!characteristics_as);
+        }
+        _ => unreachable!(),
+    };
+
+    match verified_stmt("SET GLOBAL TRANSACTION READ WRITE") {
+        Statement::SetTransaction {
+            modes,
+            global,
+            snapshot,
+            characteristics_as,
+        } => {
+            assert_eq!(
+                modes,
+                vec![TransactionMode::AccessMode(
+                    TransactionAccessMode::ReadWrite
+                ),]
+            );
+
+            assert_eq!(global, Some(true));
+            assert_eq!(snapshot, None);
+            assert!(!characteristics_as);
         }
         _ => unreachable!(),
     }
