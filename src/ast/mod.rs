@@ -885,7 +885,8 @@ pub enum Statement {
     SetTransaction {
         modes: Vec<TransactionMode>,
         snapshot: Option<Value>,
-        session: bool,
+        global: Option<bool>,
+        characteristics_as: bool,
     },
     /// `COMMENT ON ...`
     ///
@@ -1536,16 +1537,29 @@ impl fmt::Display for Statement {
             Statement::SetTransaction {
                 modes,
                 snapshot,
-                session,
+                global,
+                characteristics_as,
             } => {
-                if *session {
-                    write!(f, "SET SESSION CHARACTERISTICS AS TRANSACTION")?;
-                } else {
-                    write!(f, "SET TRANSACTION")?;
+                write!(f, "SET ")?;
+
+                if let Some(is_global) = global {
+                    if *is_global {
+                        write!(f, "GLOBAL ")?;
+                    } else {
+                        write!(f, "SESSION ")?;
+                    };
+                };
+
+                if *characteristics_as {
+                    write!(f, "CHARACTERISTICS AS ")?;
                 }
+
+                write!(f, "TRANSACTION")?;
+
                 if !modes.is_empty() {
                     write!(f, " {}", display_comma_separated(modes))?;
                 }
+
                 if let Some(snapshot_id) = snapshot {
                     write!(f, " SNAPSHOT {}", snapshot_id)?;
                 }

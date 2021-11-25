@@ -3112,11 +3112,21 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_set(&mut self) -> Result<Statement, ParserError> {
-        let modifier =
-            self.parse_one_of_keywords(&[Keyword::SESSION, Keyword::LOCAL, Keyword::HIVEVAR]);
+        let modifier = self.parse_one_of_keywords(&[
+            Keyword::GLOBAL,
+            Keyword::SESSION,
+            Keyword::LOCAL,
+            Keyword::HIVEVAR,
+        ]);
         if let Some(Keyword::HIVEVAR) = modifier {
             self.expect_token(&Token::Colon)?;
         }
+
+        let global = match modifier {
+            Some(Keyword::GLOBAL) => Some(true),
+            Some(Keyword::SESSION) => Some(false),
+            _ => None,
+        };
 
         let variable = self.parse_identifier()?;
         if variable.value.eq_ignore_ascii_case("NAMES") {
@@ -3127,10 +3137,10 @@ impl<'a> Parser<'a> {
                 None
             };
 
-            return Ok(Statement::SetNames {
+            Ok(Statement::SetNames {
                 charset_name,
                 collation_name,
-            });
+            })
         } else if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
             let mut values = vec![];
             loop {
@@ -3151,26 +3161,29 @@ impl<'a> Parser<'a> {
                     value: values,
                 });
             }
-        } else if variable.value == "CHARACTERISTICS" {
+        } else if variable.value.eq_ignore_ascii_case("CHARACTERISTICS") {
             self.expect_keywords(&[Keyword::AS, Keyword::TRANSACTION])?;
             Ok(Statement::SetTransaction {
                 modes: self.parse_transaction_modes()?,
                 snapshot: None,
-                session: true,
+                global,
+                characteristics_as: true,
             })
-        } else if variable.value == "TRANSACTION" && modifier.is_none() {
+        } else if variable.value.eq_ignore_ascii_case("TRANSACTION") {
             if self.parse_keyword(Keyword::SNAPSHOT) {
                 let snaphot_id = self.parse_value()?;
                 return Ok(Statement::SetTransaction {
                     modes: vec![],
                     snapshot: Some(snaphot_id),
-                    session: false,
+                    global,
+                    characteristics_as: false,
                 });
             }
             Ok(Statement::SetTransaction {
                 modes: self.parse_transaction_modes()?,
                 snapshot: None,
-                session: false,
+                global,
+                characteristics_as: false,
             })
         } else {
             self.expected("equals sign or TO", self.peek_token())
@@ -3931,6 +3944,7 @@ impl<'a> Parser<'a> {
     pub fn parse_transaction_modes(&mut self) -> Result<Vec<TransactionMode>, ParserError> {
         let mut modes = vec![];
         let mut required = false;
+
         loop {
             let mode = if self.parse_keywords(&[Keyword::ISOLATION, Keyword::LEVEL]) {
                 let iso_level = if self.parse_keywords(&[Keyword::READ, Keyword::UNCOMMITTED]) {

@@ -768,6 +768,7 @@ fn parse_substring_in_select() {
     }
 }
 
+#[test]
 fn parse_set_names() {
     let stmt = mysql_and_generic().verified_stmt("SET NAMES utf8mb4");
     assert_eq!(
