@@ -602,6 +602,25 @@ impl<'a> Tokenizer<'a> {
                         return Ok(s);
                     }
                 }
+                '\\' => {
+                    chars.next();
+                    match chars.peek() {
+                        None => {
+                            return self.tokenizer_error("Unterminated escape sequence");
+                        }
+                        Some(&c) => {
+                            chars.next();
+                            match c {
+                                '0' => s.push('\0'),
+                                'n' => s.push('\n'),
+                                'r' => s.push('\r'),
+                                't' => s.push('\t'),
+                                'Z' => s.push('\x1a'),
+                                x => s.push(x)
+                            }
+                        }
+                    }
+                }
                 _ => {
                     chars.next(); // consume
                     s.push(ch);
