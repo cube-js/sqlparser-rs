@@ -21,6 +21,7 @@ mod value;
 #[cfg(not(feature = "std"))]
 use alloc::{
     boxed::Box,
+    format,
     string::{String, ToString},
     vec::Vec,
 };
@@ -417,15 +418,14 @@ impl fmt::Display for WindowSpec {
             write!(f, "ORDER BY {}", display_comma_separated(&self.order_by))?;
         }
         if let Some(window_frame) = &self.window_frame {
+            f.write_str(delim)?;
             if let Some(end_bound) = &window_frame.end_bound {
-                f.write_str(delim)?;
                 write!(
                     f,
                     "{} BETWEEN {} AND {}",
                     window_frame.units, window_frame.start_bound, end_bound
                 )?;
             } else {
-                f.write_str(delim)?;
                 write!(f, "{} {}", window_frame.units, window_frame.start_bound)?;
             }
         }
@@ -698,10 +698,7 @@ pub enum Statement {
     /// least MySQL and PostgreSQL. Not all MySQL-specific syntatic forms are
     /// supported yet.
     SetVariable {
-        local: bool,
-        hivevar: bool,
-        variable: Ident,
-        value: Vec<SetVariableValue>,
+        key_values: Vec<SetVariableKeyValue>,
     },
     /// SHOW <variable>
     ///
@@ -1226,23 +1223,44 @@ impl fmt::Display for Statement {
                 if *cascade { " CASCADE" } else { "" },
                 if *purge { " PURGE" } else { "" }
             ),
-            Statement::SetVariable {
-                local,
-                variable,
-                hivevar,
-                value,
-            } => {
+
+            Statement::SetVariable { key_values } => {
                 f.write_str("SET ")?;
-                if *local {
-                    f.write_str("LOCAL ")?;
+
+                if let Some(key_value) = key_values.get(0) {
+                    if key_value.hivevar {
+                        let values: Vec<String> = key_value
+                            .value
+                            .iter()
+                            .map(|value| value.to_string())
+                            .collect();
+
+                        return write!(
+                            f,
+                            "HIVEVAR:{} = {}",
+                            key_value.key,
+                            display_comma_separated(&values)
+                        );
+                    }
                 }
-                write!(
-                    f,
-                    "{hivevar}{name} = {value}",
-                    hivevar = if *hivevar { "HIVEVAR:" } else { "" },
-                    name = variable,
-                    value = display_comma_separated(value)
-                )
+
+                let formatted_key_values: Vec<String> = key_values
+                    .iter()
+                    .map(|key_value| {
+                        format!(
+                            "{} {}",
+                            if key_value.local { "LOCAL " } else { "" },
+                            key_value
+                                .value
+                                .iter()
+                                .map(|value| format!("{} = {}", key_value.key, value.to_string()))
+                                .collect::<Vec<String>>()
+                                .join(", ")
+                        )
+                    })
+                    .collect();
+
+                write!(f, "{}", display_comma_separated(&formatted_key_values))
             }
             Statement::ShowVariable { variable } => {
                 write!(f, "SHOW")?;
@@ -1546,6 +1564,7 @@ pub enum HiveRowFormat {
     DELIMITED,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum HiveIOFormat {
@@ -1558,22 +1577,12 @@ pub enum HiveIOFormat {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HiveFormat {
     pub row_format: Option<HiveRowFormat>,
     pub storage: Option<HiveIOFormat>,
     pub location: Option<String>,
-}
-
-impl Default for HiveFormat {
-    fn default() -> Self {
-        HiveFormat {
-            row_format: None,
-            location: None,
-            storage: None,
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1668,6 +1677,15 @@ impl fmt::Display for ShowStatementFilter {
 pub enum SetVariableValue {
     Ident(Ident),
     Literal(Value),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct SetVariableKeyValue {
+    pub key: Ident,
+    pub value: Vec<SetVariableValue>,
+    pub local: bool,
+    pub hivevar: bool,
 }
 
 impl fmt::Display for SetVariableValue {

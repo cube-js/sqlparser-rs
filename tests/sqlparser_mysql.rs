@@ -130,6 +130,54 @@ fn parse_show_create() {
 }
 
 #[test]
+fn parse_set_transaction() {
+    mysql_and_generic().verified_stmt("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+}
+
+#[test]
+fn parse_set_variables() {
+    let stmt = mysql_and_generic().verified_stmt("SET autocommit = 1, sql_mode = 'test'");
+
+    assert_eq!(
+        stmt,
+        Statement::SetVariable {
+            key_values: [
+                SetVariableKeyValue {
+                    local: false,
+                    hivevar: false,
+                    key: "autocommit".into(),
+                    value: vec![SetVariableValue::Literal(number("1"))],
+                },
+                SetVariableKeyValue {
+                    local: false,
+                    hivevar: false,
+                    key: "sql_mode".into(),
+                    value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
+                        "test".into()
+                    ))],
+                }
+            ]
+            .to_vec()
+        }
+    );
+
+    let stmt = mysql_and_generic().verified_stmt("SET LOCAL autocommit = 1");
+
+    assert_eq!(
+        stmt,
+        Statement::SetVariable {
+            key_values: [SetVariableKeyValue {
+                local: true,
+                hivevar: false,
+                key: "autocommit".into(),
+                value: vec![SetVariableValue::Literal(number("1"))],
+            },]
+            .to_vec()
+        }
+    );
+}
+
+#[test]
 fn parse_create_table_auto_increment() {
     let sql = "CREATE TABLE foo (bar INT PRIMARY KEY AUTO_INCREMENT)";
     match mysql().verified_stmt(sql) {

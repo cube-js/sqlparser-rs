@@ -157,7 +157,15 @@ impl<'a> Parser<'a> {
                 Keyword::UPDATE => Ok(self.parse_update()?),
                 Keyword::ALTER => Ok(self.parse_alter()?),
                 Keyword::COPY => Ok(self.parse_copy()?),
-                Keyword::SET => Ok(self.parse_set()?),
+                Keyword::SET => {
+                    if self.parse_keyword(Keyword::TRANSACTION) {
+                        return Ok(Statement::SetTransaction {
+                            modes: self.parse_transaction_modes()?,
+                        });
+                    }
+
+                    Ok(self.parse_set()?)
+                }
                 Keyword::SHOW => Ok(self.parse_show()?),
                 Keyword::START => Ok(self.parse_start_transaction()?),
                 // `BEGIN` is a nonstandard but common alias for the
@@ -2495,12 +2503,16 @@ impl<'a> Parser<'a> {
     pub fn parse_set(&mut self) -> Result<Statement, ParserError> {
         let modifier =
             self.parse_one_of_keywords(&[Keyword::SESSION, Keyword::LOCAL, Keyword::HIVEVAR]);
+
         if let Some(Keyword::HIVEVAR) = modifier {
             self.expect_token(&Token::Colon)?;
-        }
-        let variable = self.parse_identifier()?;
-        if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
+
+            let variable = self.parse_identifier()?;
+
+            self.expect_token(&Token::Eq)?;
+
             let mut values = vec![];
+
             loop {
                 let token = self.peek_token();
                 let value = match (self.parse_value(), token) {
@@ -2509,22 +2521,52 @@ impl<'a> Parser<'a> {
                     (Err(_), unexpected) => self.expected("variable value", unexpected)?,
                 };
                 values.push(value);
+
                 if self.consume_token(&Token::Comma) {
                     continue;
                 }
+
                 return Ok(Statement::SetVariable {
-                    local: modifier == Some(Keyword::LOCAL),
-                    hivevar: Some(Keyword::HIVEVAR) == modifier,
-                    variable,
-                    value: values,
+                    key_values: [SetVariableKeyValue {
+                        key: variable,
+                        value: values,
+                        local: false,
+                        hivevar: true,
+                    }]
+                    .to_vec(),
                 });
             }
-        } else if variable.value == "TRANSACTION" && modifier.is_none() {
-            Ok(Statement::SetTransaction {
-                modes: self.parse_transaction_modes()?,
-            })
-        } else {
-            self.expected("equals sign or TO", self.peek_token())
+        }
+
+        let mut key_values: Vec<SetVariableKeyValue> = vec![];
+        loop {
+            let variable = self.parse_identifier()?;
+            let mut values = vec![];
+
+            if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
+                let token = self.peek_token();
+                let value = match (self.parse_value(), token) {
+                    (Ok(value), _) => SetVariableValue::Literal(value),
+                    (Err(_), Token::Word(ident)) => SetVariableValue::Ident(ident.to_ident()),
+                    (Err(_), unexpected) => self.expected("variable value", unexpected)?,
+                };
+                values.push(value);
+
+                key_values.push(SetVariableKeyValue {
+                    key: variable,
+                    value: values,
+                    local: modifier == Some(Keyword::LOCAL),
+                    hivevar: false,
+                });
+
+                if self.consume_token(&Token::Comma) {
+                    continue;
+                }
+
+                return Ok(Statement::SetVariable { key_values });
+            } else {
+                return self.expected("equals sign or TO", self.peek_token());
+            }
         }
     }
 
@@ -2728,14 +2770,13 @@ impl<'a> Parser<'a> {
             // followed by some joins or (B) another level of nesting.
             let mut table_and_joins = self.parse_table_and_joins()?;
 
-            if !table_and_joins.joins.is_empty() {
+            // (B): `table_and_joins` (what we found inside the parentheses)
+            // is a nested join `(foo JOIN bar)`, not followed by other joins.
+            let is_nested_join = matches!(&table_and_joins.relation, TableFactor::NestedJoin(_));
+
+            if !table_and_joins.joins.is_empty() || is_nested_join {
                 self.expect_token(&Token::RParen)?;
                 Ok(TableFactor::NestedJoin(Box::new(table_and_joins))) // (A)
-            } else if let TableFactor::NestedJoin(_) = &table_and_joins.relation {
-                // (B): `table_and_joins` (what we found inside the parentheses)
-                // is a nested join `(foo JOIN bar)`, not followed by other joins.
-                self.expect_token(&Token::RParen)?;
-                Ok(TableFactor::NestedJoin(Box::new(table_and_joins)))
             } else if dialect_of!(self is SnowflakeDialect | GenericDialect) {
                 // Dialect-specific behavior: Snowflake diverges from the
                 // standard and from most of the other implementations by

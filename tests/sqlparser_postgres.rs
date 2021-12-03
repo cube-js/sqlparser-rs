@@ -363,10 +363,13 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: "a".into(),
-            value: vec![SetVariableValue::Ident("b".into())],
+            key_values: [SetVariableKeyValue {
+                key: "a".into(),
+                value: vec![SetVariableValue::Ident("b".into())],
+                local: false,
+                hivevar: false,
+            }]
+            .to_vec()
         }
     );
 
@@ -374,12 +377,15 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: "a".into(),
-            value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
-                "b".into()
-            ))],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: "a".into(),
+                value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
+                    "b".into()
+                ))],
+            }]
+            .to_vec()
         }
     );
 
@@ -387,10 +393,13 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: "a".into(),
-            value: vec![SetVariableValue::Literal(number("0"))],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: "a".into(),
+                value: vec![SetVariableValue::Literal(number("0"))],
+            }]
+            .to_vec()
         }
     );
 
@@ -398,10 +407,13 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: "a".into(),
-            value: vec![SetVariableValue::Ident("DEFAULT".into())],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: "a".into(),
+                value: vec![SetVariableValue::Ident("DEFAULT".into())],
+            }]
+            .to_vec()
         }
     );
 
@@ -409,10 +421,13 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: true,
-            hivevar: false,
-            variable: "a".into(),
-            value: vec![SetVariableValue::Ident("b".into())],
+            key_values: [SetVariableKeyValue {
+                local: true,
+                hivevar: false,
+                key: "a".into(),
+                value: vec![SetVariableValue::Ident("b".into())],
+            }]
+            .to_vec()
         }
     );
 
