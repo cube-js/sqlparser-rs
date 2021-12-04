@@ -154,25 +154,7 @@ impl<'a> Parser<'a> {
                 Keyword::UPDATE => Ok(self.parse_update()?),
                 Keyword::ALTER => Ok(self.parse_alter()?),
                 Keyword::COPY => Ok(self.parse_copy()?),
-                Keyword::SET => {
-                    // if self.parse_keyword(Keyword::TRANSACTION) {
-                    //     let modifier =
-                    //         self.parse_one_of_keywords(&[Keyword::SESSION, Keyword::GLOBAL]);
-                    //     let global = if modifier == Some(Keyword::GLOBAL) {
-                    //         Some(true)
-                    //     } else if modifier == Some(Keyword::SESSION) {
-                    //         Some(false)
-                    //     } else {
-                    //         None
-                    //     };
-                    //     return Ok(Statement::SetTransaction {
-                    //         modes: self.parse_transaction_modes()?,
-                    //         global
-                    //     });
-                    // }
-
-                    Ok(self.parse_set()?)
-                }
+                Keyword::SET => Ok(self.parse_set()?),
                 Keyword::SHOW => Ok(self.parse_show()?),
                 Keyword::START => Ok(self.parse_start_transaction()?),
                 // `BEGIN` is a nonstandard but common alias for the
