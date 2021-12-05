@@ -1742,7 +1742,7 @@ impl fmt::Display for ShowStatementFilter {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SetVariableValue {
     Literal(Value),
-    Expr(Expr)
+    Expr(Expr),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
