@@ -2613,9 +2613,8 @@ impl<'a> Parser<'a> {
                 let value = match (self.parse_value(), token) {
                     (Ok(value), _) => SetVariableValue::Literal(value),
                     (Err(_), v) => {
-                        let expr = self.parse_expr();
-                        if expr.is_ok() {
-                            SetVariableValue::Expr(expr.unwrap())
+                        if let Ok(expr) = self.parse_expr() {
+                            SetVariableValue::Expr(expr)
                         } else {
                             self.expected("variable value", v)?
                         }
@@ -2650,10 +2649,9 @@ impl<'a> Parser<'a> {
                     (Ok(value), _) => SetVariableValue::Literal(value),
                     (Err(_), v) => {
                         self.prev_token();
-
-                        let expr = self.parse_expr();
-                        if expr.is_ok() {
-                            SetVariableValue::Expr(expr.unwrap())
+                        
+                        if let Ok(expr) = self.parse_expr() {
+                            SetVariableValue::Expr(expr)
                         } else {
                             self.expected("variable value", v)?
                         }
