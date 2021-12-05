@@ -800,6 +800,13 @@ fn parse_kill() {
     );
 }
 
+#[test]
+fn parse_show_variables() {
+    mysql().verified_stmt("SHOW VARIABLES");
+    mysql().verified_stmt("SHOW VARIABLES LIKE 'admin%'");
+    mysql().verified_stmt("SHOW VARIABLES WHERE value = '3306'");
+}
+
 fn mysql() -> TestedDialects {
     TestedDialects {
         dialects: vec![Box::new(MySqlDialect {})],
