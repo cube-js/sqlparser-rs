@@ -1738,11 +1738,18 @@ impl fmt::Display for ShowStatementFilter {
     }
 }
 
+// #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+// pub enum SetVariableValueNew {
+//     Literal(Value),
+//     Expr(Expr)
+// }
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SetVariableValue {
-    Ident(Ident),
     Literal(Value),
+    Expr(Expr)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1758,8 +1765,8 @@ impl fmt::Display for SetVariableValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use SetVariableValue::*;
         match self {
-            Ident(ident) => write!(f, "{}", ident),
             Literal(literal) => write!(f, "{}", literal),
+            Expr(expr) => write!(f, "{}", expr),
         }
     }
 }

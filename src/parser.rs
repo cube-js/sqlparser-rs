@@ -2585,9 +2585,7 @@ impl<'a> Parser<'a> {
             _ => (),
         }
 
-        let variable = self.parse_identifier()?;
-
-        if variable.value.eq_ignore_ascii_case("NAMES") {
+        if self.parse_one_of_keywords(&[Keyword::NAMES]).is_some() {
             let charset_name = self.parse_literal_string()?;
             let collation_name = if self.parse_one_of_keywords(&[Keyword::COLLATE]).is_some() {
                 Some(self.parse_literal_string()?)
@@ -2599,8 +2597,6 @@ impl<'a> Parser<'a> {
                 charset_name,
                 collation_name,
             });
-        } else {
-            self.prev_token();
         }
 
         if let Some(Keyword::HIVEVAR) = modifier {
@@ -2616,8 +2612,14 @@ impl<'a> Parser<'a> {
                 let token = self.peek_token();
                 let value = match (self.parse_value(), token) {
                     (Ok(value), _) => SetVariableValue::Literal(value),
-                    (Err(_), Token::Word(ident)) => SetVariableValue::Ident(ident.to_ident()),
-                    (Err(_), unexpected) => self.expected("variable value", unexpected)?,
+                    (Err(_), v) => {
+                        let expr = self.parse_expr();
+                        if expr.is_ok() {
+                            SetVariableValue::Expr(expr.unwrap())
+                        } else {
+                            self.expected("variable value", v)?
+                        }
+                    }
                 };
                 values.push(value);
 
@@ -2646,8 +2648,16 @@ impl<'a> Parser<'a> {
                 let token = self.peek_token();
                 let value = match (self.parse_value(), token) {
                     (Ok(value), _) => SetVariableValue::Literal(value),
-                    (Err(_), Token::Word(ident)) => SetVariableValue::Ident(ident.to_ident()),
-                    (Err(_), unexpected) => self.expected("variable value", unexpected)?,
+                    (Err(_), v) => {
+                        self.prev_token();
+
+                        let expr = self.parse_expr();
+                        if expr.is_ok() {
+                            SetVariableValue::Expr(expr.unwrap())
+                        } else {
+                            self.expected("variable value", v)?
+                        }
+                    }
                 };
                 values.push(value);
 

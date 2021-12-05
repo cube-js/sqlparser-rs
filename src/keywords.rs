@@ -292,6 +292,7 @@ define_keywords!(
     MONTH,
     MSCK,
     MULTISET,
+    NAMES,
     NATIONAL,
     NATURAL,
     NCHAR,
