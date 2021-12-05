@@ -561,12 +561,6 @@ impl fmt::Display for ShowCreateObject {
     }
 }
 
-// #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-// pub struct ShowVariables {
-//     filter: Option<ShowStatementFilter>
-// }
-
 /// A top-level statement (SELECT, INSERT, CREATE, etc.)
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
