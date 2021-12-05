@@ -561,6 +561,12 @@ impl fmt::Display for ShowCreateObject {
     }
 }
 
+// #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+// pub struct ShowVariables {
+//     filter: Option<ShowStatementFilter>
+// }
+
 /// A top-level statement (SELECT, INSERT, CREATE, etc.)
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -730,6 +736,10 @@ pub enum Statement {
     ///
     /// Note: this is a PostgreSQL-specific statement.
     ShowVariable { variable: Vec<Ident> },
+    /// SHOW VARIABLES
+    ///
+    /// Note: this is a MySQL-specific statement.
+    ShowVariables { filter: Option<ShowStatementFilter> },
     /// SHOW CREATE TABLE
     ///
     /// Note: this is a MySQL-specific statement.
@@ -1292,6 +1302,13 @@ impl fmt::Display for Statement {
                 write!(f, "SHOW")?;
                 if !variable.is_empty() {
                     write!(f, " {}", display_separated(variable, " "))?;
+                }
+                Ok(())
+            }
+            Statement::ShowVariables { filter } => {
+                write!(f, "SHOW VARIABLES")?;
+                if filter.is_some() {
+                    write!(f, " {}", filter.as_ref().unwrap().to_string())?;
                 }
                 Ok(())
             }
