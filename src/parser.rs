@@ -2546,12 +2546,47 @@ impl<'a> Parser<'a> {
             Keyword::SESSION,
             Keyword::LOCAL,
             Keyword::HIVEVAR,
+            Keyword::TRANSACTION,
         ]);
-        if let Some(Keyword::HIVEVAR) = modifier {
-            self.expect_token(&Token::Colon)?;
+
+        match modifier {
+            Some(Keyword::GLOBAL) | Some(Keyword::SESSION) | Some(Keyword::TRANSACTION) => {
+                let global = if modifier == Some(Keyword::GLOBAL) {
+                    Some(true)
+                } else if modifier == Some(Keyword::SESSION) {
+                    Some(false)
+                } else {
+                    None
+                };
+
+                if let Some(Keyword::TRANSACTION) = modifier {
+                    return Ok(Statement::SetTransaction {
+                        modes: self.parse_transaction_modes()?,
+                        global,
+                    });
+                }
+
+                let identifier = self.parse_identifier();
+
+                if identifier.is_ok()
+                    && identifier
+                        .unwrap()
+                        .value
+                        .eq_ignore_ascii_case("TRANSACTION")
+                {
+                    return Ok(Statement::SetTransaction {
+                        modes: self.parse_transaction_modes()?,
+                        global,
+                    });
+                } else {
+                    self.prev_token();
+                }
+            }
+            _ => (),
         }
 
         let variable = self.parse_identifier()?;
+
         if variable.value.eq_ignore_ascii_case("NAMES") {
             let charset_name = self.parse_literal_string()?;
             let collation_name = if self.parse_one_of_keywords(&[Keyword::COLLATE]).is_some() {
@@ -2560,12 +2595,23 @@ impl<'a> Parser<'a> {
                 None
             };
 
-            Ok(Statement::SetNames {
+            return Ok(Statement::SetNames {
                 charset_name,
                 collation_name,
-            })
-        } else if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
+            });
+        } else {
+            self.prev_token();
+        }
+
+        if let Some(Keyword::HIVEVAR) = modifier {
+            self.expect_token(&Token::Colon)?;
+
+            let variable = self.parse_identifier()?;
+
+            self.expect_token(&Token::Eq)?;
+
             let mut values = vec![];
+
             loop {
                 let token = self.peek_token();
                 let value = match (self.parse_value(), token) {
@@ -2574,31 +2620,52 @@ impl<'a> Parser<'a> {
                     (Err(_), unexpected) => self.expected("variable value", unexpected)?,
                 };
                 values.push(value);
+
                 if self.consume_token(&Token::Comma) {
                     continue;
                 }
+
                 return Ok(Statement::SetVariable {
-                    local: modifier == Some(Keyword::LOCAL),
-                    hivevar: Some(Keyword::HIVEVAR) == modifier,
-                    variable,
-                    value: values,
+                    key_values: [SetVariableKeyValue {
+                        key: variable,
+                        value: values,
+                        local: false,
+                        hivevar: true,
+                    }]
+                    .to_vec(),
                 });
             }
-        } else if variable.value.eq_ignore_ascii_case("TRANSACTION") {
-            let global = if modifier == Some(Keyword::GLOBAL) {
-                Some(true)
-            } else if modifier == Some(Keyword::SESSION) {
-                Some(false)
-            } else {
-                None
-            };
+        }
 
-            Ok(Statement::SetTransaction {
-                global,
-                modes: self.parse_transaction_modes()?,
-            })
-        } else {
-            self.expected("equals sign or TO", self.peek_token())
+        let mut key_values: Vec<SetVariableKeyValue> = vec![];
+        loop {
+            let variable = self.parse_identifier()?;
+            let mut values = vec![];
+
+            if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
+                let token = self.peek_token();
+                let value = match (self.parse_value(), token) {
+                    (Ok(value), _) => SetVariableValue::Literal(value),
+                    (Err(_), Token::Word(ident)) => SetVariableValue::Ident(ident.to_ident()),
+                    (Err(_), unexpected) => self.expected("variable value", unexpected)?,
+                };
+                values.push(value);
+
+                key_values.push(SetVariableKeyValue {
+                    key: variable,
+                    value: values,
+                    local: modifier == Some(Keyword::LOCAL),
+                    hivevar: false,
+                });
+
+                if self.consume_token(&Token::Comma) {
+                    continue;
+                }
+
+                return Ok(Statement::SetVariable { key_values });
+            } else {
+                return self.expected("equals sign or TO", self.peek_token());
+            }
         }
     }
 
@@ -2806,14 +2873,13 @@ impl<'a> Parser<'a> {
             // followed by some joins or (B) another level of nesting.
             let mut table_and_joins = self.parse_table_and_joins()?;
 
-            if !table_and_joins.joins.is_empty() {
+            // (B): `table_and_joins` (what we found inside the parentheses)
+            // is a nested join `(foo JOIN bar)`, not followed by other joins.
+            let is_nested_join = matches!(&table_and_joins.relation, TableFactor::NestedJoin(_));
+
+            if !table_and_joins.joins.is_empty() || is_nested_join {
                 self.expect_token(&Token::RParen)?;
                 Ok(TableFactor::NestedJoin(Box::new(table_and_joins))) // (A)
-            } else if let TableFactor::NestedJoin(_) = &table_and_joins.relation {
-                // (B): `table_and_joins` (what we found inside the parentheses)
-                // is a nested join `(foo JOIN bar)`, not followed by other joins.
-                self.expect_token(&Token::RParen)?;
-                Ok(TableFactor::NestedJoin(Box::new(table_and_joins)))
             } else if dialect_of!(self is SnowflakeDialect | GenericDialect) {
                 // Dialect-specific behavior: Snowflake diverges from the
                 // standard and from most of the other implementations by
