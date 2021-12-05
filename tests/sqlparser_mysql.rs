@@ -217,6 +217,13 @@ fn parse_create_table_with_minimum_display_width() {
 }
 
 #[test]
+fn parse_show_variables() {
+    mysql().verified_stmt("SHOW VARIABLES");
+    mysql().verified_stmt("SHOW VARIABLES LIKE 'admin%'");
+    mysql().verified_stmt("SHOW VARIABLES WHERE value = '3306'");
+}
+
+#[test]
 fn parse_set_names() {
     let stmt = mysql_and_generic().verified_stmt("SET NAMES utf8mb4");
     assert_eq!(

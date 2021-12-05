@@ -477,6 +477,7 @@ define_keywords!(
     VALUE_OF,
     VARBINARY,
     VARCHAR,
+    VARIABLES,
     VARYING,
     VAR_POP,
     VAR_SAMP,
