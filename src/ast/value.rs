@@ -11,7 +11,10 @@
 // limitations under the License.
 
 #[cfg(not(feature = "std"))]
-use alloc::string::String;
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+};
 use core::fmt;
 
 #[cfg(feature = "bigdecimal")]

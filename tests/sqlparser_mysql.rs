@@ -216,22 +216,60 @@ fn parse_show_create() {
 }
 
 #[test]
+fn parse_set_transaction() {
+    mysql_and_generic().verified_stmt("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+}
+
+#[test]
 fn parse_set_variables() {
-    mysql_and_generic().verified_stmt("SET sql_mode = CONCAT(@@sql_mode, ',STRICT_TRANS_TABLES')");
+    let stmt = mysql_and_generic().verified_stmt("SET autocommit = 1, sql_mode = 'test'");
 
     assert_eq!(
-        mysql_and_generic().verified_stmt("SET LOCAL autocommit = 1"),
+        stmt,
         Statement::SetVariable {
-            local: true,
-            hivevar: false,
-            variable: ObjectName(vec![Ident::new("autocommit")]),
-            value: vec![Expr::Value(Value::Number(
-                #[cfg(not(feature = "bigdecimal"))]
-                "1".into(),
-                #[cfg(feature = "bigdecimal")]
-                bigdecimal::BigDecimal::from(1),
-                false
-            ))],
+            key_values: [
+                SetVariableKeyValue {
+                    local: false,
+                    hivevar: false,
+                    key: ObjectName(vec![Ident::new("autocommit")]),
+                    value: vec![Expr::Value(Value::Number(
+                        #[cfg(not(feature = "bigdecimal"))]
+                        "1".into(),
+                        #[cfg(feature = "bigdecimal")]
+                        bigdecimal::BigDecimal::from(1),
+                        false
+                    ))],
+                },
+                SetVariableKeyValue {
+                    local: false,
+                    hivevar: false,
+                    key: ObjectName(vec![Ident::new("sql_mode")]),
+                    value: vec![Expr::Value(Value::SingleQuotedString("test".into()))],
+                }
+            ]
+            .to_vec()
+        }
+    );
+
+    mysql_and_generic().verified_stmt("SET sql_mode = CONCAT(@@sql_mode, ',STRICT_TRANS_TABLES')");
+
+    let stmt = mysql_and_generic().verified_stmt("SET LOCAL autocommit = 1");
+
+    assert_eq!(
+        stmt,
+        Statement::SetVariable {
+            key_values: vec![SetVariableKeyValue {
+                local: true,
+                hivevar: false,
+                key: ObjectName(vec![Ident::new("autocommit")]),
+                value: vec![Expr::Value(Value::Number(
+                    #[cfg(not(feature = "bigdecimal"))]
+                    "1".into(),
+                    #[cfg(feature = "bigdecimal")]
+                    bigdecimal::BigDecimal::from(1),
+                    false
+                ))],
+            },],
         }
     );
 }

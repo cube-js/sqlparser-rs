@@ -20,6 +20,7 @@ mod value;
 #[cfg(not(feature = "std"))]
 use alloc::{
     boxed::Box,
+    format,
     string::{String, ToString},
     vec::Vec,
 };
@@ -1075,10 +1076,7 @@ pub enum Statement {
     /// least MySQL and PostgreSQL. Not all MySQL-specific syntatic forms are
     /// supported yet.
     SetVariable {
-        local: bool,
-        hivevar: bool,
-        variable: ObjectName,
-        value: Vec<Expr>,
+        key_values: Vec<SetVariableKeyValue>,
     },
     /// SET NAMES 'charset_name' [COLLATE 'collation_name']
     ///
@@ -1836,23 +1834,43 @@ impl fmt::Display for Statement {
                 }
                 Ok(())
             }
-            Statement::SetVariable {
-                local,
-                variable,
-                hivevar,
-                value,
-            } => {
+            Statement::SetVariable { key_values } => {
                 f.write_str("SET ")?;
-                if *local {
-                    f.write_str("LOCAL ")?;
+
+                if let Some(key_value) = key_values.get(0) {
+                    if key_value.hivevar {
+                        let values: Vec<String> = key_value
+                            .value
+                            .iter()
+                            .map(|value| value.to_string())
+                            .collect();
+
+                        return write!(
+                            f,
+                            "HIVEVAR:{} = {}",
+                            key_value.key,
+                            display_comma_separated(&values)
+                        );
+                    }
                 }
-                write!(
-                    f,
-                    "{hivevar}{name} = {value}",
-                    hivevar = if *hivevar { "HIVEVAR:" } else { "" },
-                    name = variable,
-                    value = display_comma_separated(value)
-                )
+
+                let formatted_key_values: Vec<String> = key_values
+                    .iter()
+                    .map(|key_value| {
+                        format!(
+                            "{}{}",
+                            if key_value.local { "LOCAL " } else { "" },
+                            key_value
+                                .value
+                                .iter()
+                                .map(|value| format!("{} = {}", key_value.key, value.to_string()))
+                                .collect::<Vec<String>>()
+                                .join(", ")
+                        )
+                    })
+                    .collect();
+
+                write!(f, "{}", display_comma_separated(&formatted_key_values))
             }
             Statement::SetNames {
                 charset_name,
@@ -2720,6 +2738,15 @@ impl fmt::Display for ShowStatementFilter {
             Where(expr) => write!(f, "WHERE {}", expr),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct SetVariableKeyValue {
+    pub key: ObjectName,
+    pub value: Vec<Expr>,
+    pub local: bool,
+    pub hivevar: bool,
 }
 
 /// Sqlite specific syntax

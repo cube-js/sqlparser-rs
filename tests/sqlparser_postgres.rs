@@ -779,13 +779,16 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![Expr::Identifier(Ident {
-                value: "b".into(),
-                quote_style: None
-            })],
+            key_values: [SetVariableKeyValue {
+                key: ObjectName(vec![Ident::new("a")]),
+                value: vec![Expr::Identifier(Ident {
+                    value: "b".into(),
+                    quote_style: None
+                })],
+                local: false,
+                hivevar: false,
+            }]
+            .to_vec()
         }
     );
 
@@ -793,10 +796,13 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![Expr::Value(Value::SingleQuotedString("b".into()))],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: ObjectName(vec![Ident::new("a")]),
+                value: vec![Expr::Value(Value::SingleQuotedString("b".into()))],
+            }]
+            .to_vec()
         }
     );
 
@@ -804,16 +810,19 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![Expr::Value(Value::Number(
-                #[cfg(not(feature = "bigdecimal"))]
-                "0".into(),
-                #[cfg(feature = "bigdecimal")]
-                bigdecimal::BigDecimal::from(0),
-                false,
-            ))],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: ObjectName(vec![Ident::new("a")]),
+                value: vec![Expr::Value(Value::Number(
+                    #[cfg(not(feature = "bigdecimal"))]
+                    "0".into(),
+                    #[cfg(feature = "bigdecimal")]
+                    bigdecimal::BigDecimal::from(0),
+                    false,
+                ))],
+            }]
+            .to_vec()
         }
     );
 
@@ -821,13 +830,16 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![Expr::Identifier(Ident {
-                value: "DEFAULT".into(),
-                quote_style: None
-            })],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: ObjectName(vec![Ident::new("a")]),
+                value: vec![Expr::Identifier(Ident {
+                    value: "DEFAULT".into(),
+                    quote_style: None
+                })],
+            }]
+            .to_vec()
         }
     );
 
@@ -835,13 +847,16 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: true,
-            hivevar: false,
-            variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![Expr::Identifier(Ident {
-                value: "b".into(),
-                quote_style: None
-            })],
+            key_values: [SetVariableKeyValue {
+                local: true,
+                hivevar: false,
+                key: ObjectName(vec![Ident::new("a")]),
+                value: vec![Expr::Identifier(Ident {
+                    value: "b".into(),
+                    quote_style: None
+                })],
+            }]
+            .to_vec()
         }
     );
 
@@ -849,13 +864,16 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: ObjectName(vec![Ident::new("a"), Ident::new("b"), Ident::new("c")]),
-            value: vec![Expr::Identifier(Ident {
-                value: "b".into(),
-                quote_style: None
-            })],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: ObjectName(vec![Ident::new("a"), Ident::new("b"), Ident::new("c")]),
+                value: vec![Expr::Identifier(Ident {
+                    value: "b".into(),
+                    quote_style: None
+                })],
+            },]
+            .to_vec()
         }
     );
 
@@ -866,16 +884,19 @@ fn parse_set() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            local: false,
-            hivevar: false,
-            variable: ObjectName(vec![
-                Ident::new("hive"),
-                Ident::new("tez"),
-                Ident::new("auto"),
-                Ident::new("reducer"),
-                Ident::new("parallelism")
-            ]),
-            value: vec![Expr::Value(Boolean(false))],
+            key_values: [SetVariableKeyValue {
+                local: false,
+                hivevar: false,
+                key: ObjectName(vec![
+                    Ident::new("hive"),
+                    Ident::new("tez"),
+                    Ident::new("auto"),
+                    Ident::new("reducer"),
+                    Ident::new("parallelism")
+                ]),
+                value: vec![Expr::Value(Boolean(false))],
+            },]
+            .to_vec()
         }
     );
 
