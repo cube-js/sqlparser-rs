@@ -2649,7 +2649,7 @@ impl<'a> Parser<'a> {
                     (Ok(value), _) => SetVariableValue::Literal(value),
                     (Err(_), v) => {
                         self.prev_token();
-                        
+
                         if let Ok(expr) = self.parse_expr() {
                             SetVariableValue::Expr(expr)
                         } else {
