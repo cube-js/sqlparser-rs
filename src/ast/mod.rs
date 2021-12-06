@@ -1075,7 +1075,7 @@ pub enum Statement {
         local: bool,
         hivevar: bool,
         variable: ObjectName,
-        value: Vec<SetVariableValue>,
+        value: Vec<Expr>,
     },
     /// SET NAMES 'charset_name' [COLLATE 'collation_name']
     ///
@@ -2662,23 +2662,6 @@ impl fmt::Display for ShowStatementFilter {
             Like(pattern) => write!(f, "LIKE '{}'", value::escape_single_quote_string(pattern)),
             ILike(pattern) => write!(f, "ILIKE {}", value::escape_single_quote_string(pattern)),
             Where(expr) => write!(f, "WHERE {}", expr),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum SetVariableValue {
-    Ident(Ident),
-    Literal(Value),
-}
-
-impl fmt::Display for SetVariableValue {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use SetVariableValue::*;
-        match self {
-            Ident(ident) => write!(f, "{}", ident),
-            Literal(literal) => write!(f, "{}", literal),
         }
     }
 }

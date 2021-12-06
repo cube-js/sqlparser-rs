@@ -782,7 +782,10 @@ fn parse_set() {
             local: false,
             hivevar: false,
             variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![SetVariableValue::Ident("b".into())],
+            value: vec![Expr::Identifier(Ident {
+                value: "b".into(),
+                quote_style: None
+            })],
         }
     );
 
@@ -793,9 +796,7 @@ fn parse_set() {
             local: false,
             hivevar: false,
             variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
-                "b".into()
-            ))],
+            value: vec![Expr::Value(Value::SingleQuotedString("b".into()))],
         }
     );
 
@@ -806,7 +807,13 @@ fn parse_set() {
             local: false,
             hivevar: false,
             variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![SetVariableValue::Literal(number("0"))],
+            value: vec![Expr::Value(Value::Number(
+                #[cfg(not(feature = "bigdecimal"))]
+                "0".into(),
+                #[cfg(feature = "bigdecimal")]
+                bigdecimal::BigDecimal::from(0),
+                false,
+            ))],
         }
     );
 
@@ -817,7 +824,10 @@ fn parse_set() {
             local: false,
             hivevar: false,
             variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![SetVariableValue::Ident("DEFAULT".into())],
+            value: vec![Expr::Identifier(Ident {
+                value: "DEFAULT".into(),
+                quote_style: None
+            })],
         }
     );
 
@@ -828,7 +838,10 @@ fn parse_set() {
             local: true,
             hivevar: false,
             variable: ObjectName(vec![Ident::new("a")]),
-            value: vec![SetVariableValue::Ident("b".into())],
+            value: vec![Expr::Identifier(Ident {
+                value: "b".into(),
+                quote_style: None
+            })],
         }
     );
 
@@ -839,7 +852,10 @@ fn parse_set() {
             local: false,
             hivevar: false,
             variable: ObjectName(vec![Ident::new("a"), Ident::new("b"), Ident::new("c")]),
-            value: vec![SetVariableValue::Ident("b".into())],
+            value: vec![Expr::Identifier(Ident {
+                value: "b".into(),
+                quote_style: None
+            })],
         }
     );
 
@@ -859,7 +875,7 @@ fn parse_set() {
                 Ident::new("reducer"),
                 Ident::new("parallelism")
             ]),
-            value: vec![SetVariableValue::Literal(Boolean(false))],
+            value: vec![Expr::Value(Boolean(false))],
         }
     );
 
