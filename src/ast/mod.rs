@@ -1740,29 +1740,22 @@ impl fmt::Display for ShowStatementFilter {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum SetVariableValue {
-    Literal(Value),
-    Expr(Expr),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SetVariableKeyValue {
     pub key: Ident,
-    pub value: Vec<SetVariableValue>,
+    pub value: Vec<Expr>,
     pub local: bool,
     pub hivevar: bool,
 }
 
-impl fmt::Display for SetVariableValue {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use SetVariableValue::*;
-        match self {
-            Literal(literal) => write!(f, "{}", literal),
-            Expr(expr) => write!(f, "{}", expr),
-        }
-    }
-}
+// impl fmt::Display for SetVariableValue {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         use SetVariableValue::*;
+//         match self {
+//             Literal(literal) => write!(f, "{}", literal),
+//             Expr(expr) => write!(f, "{}", expr),
+//         }
+//     }
+// }
 
 /// Sqlite specific syntax
 ///

@@ -129,23 +129,21 @@ fn parse_set_transaction() {
 
 #[test]
 fn parse_set_variables() {
-    let stmt = mysql_and_generic().verified_stmt("SET autocommit = 1, sql_mode = 'test'");
-
     assert_eq!(
-        stmt,
+        mysql_and_generic().verified_stmt("SET autocommit = 1, sql_mode = 'test'"),
         Statement::SetVariable {
             key_values: [
                 SetVariableKeyValue {
                     local: false,
                     hivevar: false,
                     key: "autocommit".into(),
-                    value: vec![SetVariableValue::Literal(number("1"))],
+                    value: vec![Expr::Value(Value::Number("1".into(), false))],
                 },
                 SetVariableKeyValue {
                     local: false,
                     hivevar: false,
                     key: "sql_mode".into(),
-                    value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
+                    value: vec![Expr::Value(Value::SingleQuotedString(
                         "test".into()
                     ))],
                 }
@@ -163,7 +161,7 @@ fn parse_set_variables() {
                 local: true,
                 hivevar: false,
                 key: "autocommit".into(),
-                value: vec![SetVariableValue::Literal(number("1"))],
+                value: vec![Expr::Value(Value::Number("1".into(), false))],
             },]
             .to_vec()
         }

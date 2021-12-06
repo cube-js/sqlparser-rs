@@ -2609,17 +2609,12 @@ impl<'a> Parser<'a> {
             let mut values = vec![];
 
             loop {
-                let token = self.peek_token();
-                let value = match (self.parse_value(), token) {
-                    (Ok(value), _) => SetVariableValue::Literal(value),
-                    (Err(_), v) => {
-                        if let Ok(expr) = self.parse_expr() {
-                            SetVariableValue::Expr(expr)
-                        } else {
-                            self.expected("variable value", v)?
-                        }
-                    }
+                let value = if let Ok(expr) = self.parse_expr() {
+                    expr
+                } else {
+                    self.expected("variable value", self.peek_token())?
                 };
+                
                 values.push(value);
 
                 if self.consume_token(&Token::Comma) {
@@ -2644,19 +2639,12 @@ impl<'a> Parser<'a> {
             let mut values = vec![];
 
             if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
-                let token = self.peek_token();
-                let value = match (self.parse_value(), token) {
-                    (Ok(value), _) => SetVariableValue::Literal(value),
-                    (Err(_), v) => {
-                        self.prev_token();
-
-                        if let Ok(expr) = self.parse_expr() {
-                            SetVariableValue::Expr(expr)
-                        } else {
-                            self.expected("variable value", v)?
-                        }
-                    }
+                let value = if let Ok(expr) = self.parse_expr() {
+                    expr
+                } else {
+                    self.expected("variable value", self.peek_token())?
                 };
+
                 values.push(value);
 
                 key_values.push(SetVariableKeyValue {
