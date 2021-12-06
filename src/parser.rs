@@ -2614,7 +2614,7 @@ impl<'a> Parser<'a> {
                 } else {
                     self.expected("variable value", self.peek_token())?
                 };
-                
+
                 values.push(value);
 
                 if self.consume_token(&Token::Comma) {

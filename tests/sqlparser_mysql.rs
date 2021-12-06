@@ -143,9 +143,7 @@ fn parse_set_variables() {
                     local: false,
                     hivevar: false,
                     key: "sql_mode".into(),
-                    value: vec![Expr::Value(Value::SingleQuotedString(
-                        "test".into()
-                    ))],
+                    value: vec![Expr::Value(Value::SingleQuotedString("test".into()))],
                 }
             ]
             .to_vec()
