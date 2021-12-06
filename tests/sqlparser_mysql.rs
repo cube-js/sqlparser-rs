@@ -129,33 +129,32 @@ fn parse_set_transaction() {
 
 #[test]
 fn parse_set_variables() {
-    mysql_and_generic().verified_stmt("SET autocommit = 1, sql_mode = 'test'");
+    let stmt = mysql_and_generic().verified_stmt("SET autocommit = 1, sql_mode = 'test'");
+
+    assert_eq!(
+        stmt,
+        Statement::SetVariable {
+            key_values: [
+                SetVariableKeyValue {
+                    local: false,
+                    hivevar: false,
+                    key: "autocommit".into(),
+                    value: vec![SetVariableValue::Literal(number("1"))],
+                },
+                SetVariableKeyValue {
+                    local: false,
+                    hivevar: false,
+                    key: "sql_mode".into(),
+                    value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
+                        "test".into()
+                    ))],
+                }
+            ]
+            .to_vec()
+        }
+    );
 
     mysql_and_generic().verified_stmt("SET sql_mode = CONCAT(@@sql_mode, ',STRICT_TRANS_TABLES')");
-
-    // println!("-??? {:?}", stmt);
-    // assert_eq!(
-    //     stmt,
-    //     Statement::SetVariable {
-    //         key_values: [
-    //             SetVariableKeyValue {
-    //                 local: false,
-    //                 hivevar: false,
-    //                 key: "autocommit".into(),
-    //                 value: vec![SetVariableValue::Literal(number("1"))],
-    //             },
-    //             SetVariableKeyValue {
-    //                 local: false,
-    //                 hivevar: false,
-    //                 key: "sql_mode".into(),
-    //                 value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
-    //                     "test".into()
-    //                 ))],
-    //             }
-    //         ]
-    //         .to_vec()
-    //     }
-    // );
 
     assert_eq!(
         mysql_and_generic().verified_stmt("SET LOCAL autocommit = 1"),
