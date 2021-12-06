@@ -1747,16 +1747,6 @@ pub struct SetVariableKeyValue {
     pub hivevar: bool,
 }
 
-// impl fmt::Display for SetVariableValue {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         use SetVariableValue::*;
-//         match self {
-//             Literal(literal) => write!(f, "{}", literal),
-//             Expr(expr) => write!(f, "{}", expr),
-//         }
-//     }
-// }
-
 /// Sqlite specific syntax
 ///
 /// https://sqlite.org/lang_conflict.html
