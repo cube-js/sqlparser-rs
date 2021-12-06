@@ -3194,8 +3194,8 @@ impl<'a> Parser<'a> {
             let mut values = vec![];
 
             loop {
-                let value = if let Ok(value) = self.parse_value() {
-                    SetVariableValue::Literal(value)
+                let value = if let Ok(expr) = self.parse_expr() {
+                    expr
                 } else {
                     self.expected("variable value", self.peek_token())?
                 };
@@ -3224,8 +3224,8 @@ impl<'a> Parser<'a> {
             let mut values = vec![];
 
             if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
-                let value = if let Ok(value) = self.parse_value() {
-                    SetVariableValue::Literal(value)
+                let value = if let Ok(expr) = self.parse_expr() {
+                    expr
                 } else {
                     self.expected("variable value", self.peek_token())?
                 };
