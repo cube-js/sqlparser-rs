@@ -2585,9 +2585,7 @@ impl<'a> Parser<'a> {
             _ => (),
         }
 
-        let variable = self.parse_identifier()?;
-
-        if variable.value.eq_ignore_ascii_case("NAMES") {
+        if self.parse_one_of_keywords(&[Keyword::NAMES]).is_some() {
             let charset_name = self.parse_literal_string()?;
             let collation_name = if self.parse_one_of_keywords(&[Keyword::COLLATE]).is_some() {
                 Some(self.parse_literal_string()?)
@@ -2599,8 +2597,6 @@ impl<'a> Parser<'a> {
                 charset_name,
                 collation_name,
             });
-        } else {
-            self.prev_token();
         }
 
         if let Some(Keyword::HIVEVAR) = modifier {
@@ -2613,12 +2609,12 @@ impl<'a> Parser<'a> {
             let mut values = vec![];
 
             loop {
-                let token = self.peek_token();
-                let value = match (self.parse_value(), token) {
-                    (Ok(value), _) => SetVariableValue::Literal(value),
-                    (Err(_), Token::Word(ident)) => SetVariableValue::Ident(ident.to_ident()),
-                    (Err(_), unexpected) => self.expected("variable value", unexpected)?,
+                let value = if let Ok(expr) = self.parse_expr() {
+                    expr
+                } else {
+                    self.expected("variable value", self.peek_token())?
                 };
+
                 values.push(value);
 
                 if self.consume_token(&Token::Comma) {
@@ -2643,12 +2639,12 @@ impl<'a> Parser<'a> {
             let mut values = vec![];
 
             if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
-                let token = self.peek_token();
-                let value = match (self.parse_value(), token) {
-                    (Ok(value), _) => SetVariableValue::Literal(value),
-                    (Err(_), Token::Word(ident)) => SetVariableValue::Ident(ident.to_ident()),
-                    (Err(_), unexpected) => self.expected("variable value", unexpected)?,
+                let value = if let Ok(expr) = self.parse_expr() {
+                    expr
+                } else {
+                    self.expected("variable value", self.peek_token())?
                 };
+
                 values.push(value);
 
                 key_values.push(SetVariableKeyValue {

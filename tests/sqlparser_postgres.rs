@@ -368,7 +368,10 @@ fn parse_set() {
         Statement::SetVariable {
             key_values: [SetVariableKeyValue {
                 key: "a".into(),
-                value: vec![SetVariableValue::Ident("b".into())],
+                value: vec![Expr::Identifier(Ident {
+                    value: "b".into(),
+                    quote_style: None
+                })],
                 local: false,
                 hivevar: false,
             }]
@@ -384,9 +387,7 @@ fn parse_set() {
                 local: false,
                 hivevar: false,
                 key: "a".into(),
-                value: vec![SetVariableValue::Literal(Value::SingleQuotedString(
-                    "b".into()
-                ))],
+                value: vec![Expr::Value(Value::SingleQuotedString("b".into()))],
             }]
             .to_vec()
         }
@@ -400,7 +401,7 @@ fn parse_set() {
                 local: false,
                 hivevar: false,
                 key: "a".into(),
-                value: vec![SetVariableValue::Literal(number("0"))],
+                value: vec![Expr::Value(Value::Number("0".into(), false))],
             }]
             .to_vec()
         }
@@ -414,7 +415,10 @@ fn parse_set() {
                 local: false,
                 hivevar: false,
                 key: "a".into(),
-                value: vec![SetVariableValue::Ident("DEFAULT".into())],
+                value: vec![Expr::Identifier(Ident {
+                    value: "DEFAULT".into(),
+                    quote_style: None
+                })],
             }]
             .to_vec()
         }
@@ -428,7 +432,10 @@ fn parse_set() {
                 local: true,
                 hivevar: false,
                 key: "a".into(),
-                value: vec![SetVariableValue::Ident("b".into())],
+                value: vec![Expr::Identifier(Ident {
+                    value: "b".into(),
+                    quote_style: None
+                })],
             }]
             .to_vec()
         }
