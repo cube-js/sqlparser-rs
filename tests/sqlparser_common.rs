@@ -3694,6 +3694,16 @@ fn parse_substring() {
     );
 
     one_statement_parses_to(
+        "SELECT SUBSTRING('Function SUBSTRING', 9)",
+        "SELECT SUBSTRING('Function SUBSTRING' FROM 9)",
+    );
+
+    one_statement_parses_to(
+        "SELECT SUBSTRING('Function SUBSTRING', 1, 8)",
+        "SELECT SUBSTRING('Function SUBSTRING' FROM 1 FOR 8)",
+    );
+
+    one_statement_parses_to(
         "SELECT SUBSTRING('1' FROM 1 FOR 3)",
         "SELECT SUBSTRING('1' FROM 1 FOR 3)",
     );
