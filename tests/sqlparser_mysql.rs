@@ -820,6 +820,36 @@ fn parse_show_variables() {
 }
 
 #[test]
+fn parse_kill() {
+    let stmt = mysql_and_generic().verified_stmt("KILL CONNECTION 5");
+    assert_eq!(
+        stmt,
+        Statement::Kill {
+            modifier: Some(KillType::Connection),
+            id: 5,
+        }
+    );
+
+    let stmt = mysql_and_generic().verified_stmt("KILL QUERY 5");
+    assert_eq!(
+        stmt,
+        Statement::Kill {
+            modifier: Some(KillType::Query),
+            id: 5,
+        }
+    );
+
+    let stmt = mysql_and_generic().verified_stmt("KILL 5");
+    assert_eq!(
+        stmt,
+        Statement::Kill {
+            modifier: None,
+            id: 5,
+        }
+    );
+}
+
+#[test]
 fn parse_set_names() {
     let stmt = mysql_and_generic().verified_stmt("SET NAMES utf8mb4");
     assert_eq!(
