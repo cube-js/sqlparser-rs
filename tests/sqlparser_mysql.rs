@@ -93,8 +93,10 @@ fn parse_show_columns() {
         .one_statement_parses_to("SHOW COLUMNS IN mytable", "SHOW COLUMNS FROM mytable");
     mysql_and_generic()
         .one_statement_parses_to("SHOW FIELDS IN mytable", "SHOW COLUMNS FROM mytable");
-    mysql_and_generic()
-        .one_statement_parses_to("SHOW COLUMNS FROM mytable FROM mydb", "SHOW COLUMNS FROM mydb.mytable");
+    mysql_and_generic().one_statement_parses_to(
+        "SHOW COLUMNS FROM mytable FROM mydb",
+        "SHOW COLUMNS FROM mydb.mytable",
+    );
 }
 
 #[test]

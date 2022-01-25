@@ -2740,12 +2740,20 @@ impl<'a> Parser<'a> {
         self.expect_one_of_keywords(&[Keyword::COLUMNS, Keyword::FIELDS])?;
         self.expect_one_of_keywords(&[Keyword::FROM, Keyword::IN])?;
         let table_name = self.parse_object_name()?;
-        let db_name = match self.parse_one_of_keywords(&[Keyword::FROM, Keyword::IN]) {
-            Some(_) => Some(self.parse_object_name()?),
-            None => None,
+        let double_from = self.parse_one_of_keywords(&[Keyword::FROM, Keyword::IN]);
+        let db_name = if double_from.is_some() {
+            Some(self.parse_object_name()?)
+        } else {
+            None
         };
         let object_name = match db_name {
-            Some(db_name) => ObjectName(db_name.0.into_iter().chain(table_name.0.into_iter()).collect()),
+            Some(db_name) => ObjectName(
+                db_name
+                    .0
+                    .into_iter()
+                    .chain(table_name.0.into_iter())
+                    .collect(),
+            ),
             None => table_name,
         };
         let filter = self.parse_show_statement_filter()?;
