@@ -2740,14 +2740,27 @@ impl<'a> Parser<'a> {
         self.expect_one_of_keywords(&[Keyword::COLUMNS, Keyword::FIELDS])?;
         self.expect_one_of_keywords(&[Keyword::FROM, Keyword::IN])?;
         let table_name = self.parse_object_name()?;
-        // MySQL also supports FROM <database> here. In other words, MySQL
-        // allows both FROM <table> FROM <database> and FROM <database>.<table>,
-        // while we only support the latter for now.
+        let double_from = self.parse_one_of_keywords(&[Keyword::FROM, Keyword::IN]);
+        let db_name = if double_from.is_some() {
+            Some(self.parse_object_name()?)
+        } else {
+            None
+        };
+        let object_name = match db_name {
+            Some(db_name) => ObjectName(
+                db_name
+                    .0
+                    .into_iter()
+                    .chain(table_name.0.into_iter())
+                    .collect(),
+            ),
+            None => table_name,
+        };
         let filter = self.parse_show_statement_filter()?;
         Ok(Statement::ShowColumns {
             extended,
             full,
-            table_name,
+            table_name: object_name,
             filter,
         })
     }
