@@ -40,7 +40,7 @@ pub use self::query::{
     OrderByExpr, Query, Select, SelectItem, SetExpr, SetOperator, TableAlias, TableFactor,
     TableWithJoins, Top, Values, With,
 };
-pub use self::value::{DateTimeField, TrimWhereField, Value};
+pub use self::value::{escape_single_quote_string, DateTimeField, TrimWhereField, Value};
 
 struct DisplaySeparated<'a, T>
 where
