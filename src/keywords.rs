@@ -437,6 +437,7 @@ define_keywords!(
     SYSTEM_TIME,
     SYSTEM_USER,
     TABLE,
+    TABLES,
     TABLESAMPLE,
     TBLPROPERTIES,
     TEMP,
