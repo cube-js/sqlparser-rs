@@ -2686,17 +2686,19 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_show(&mut self) -> Result<Statement, ParserError> {
+        let extended = self.parse_keyword(Keyword::EXTENDED);
+        let full = self.parse_keyword(Keyword::FULL);
         if self
-            .parse_one_of_keywords(&[
-                Keyword::EXTENDED,
-                Keyword::FULL,
-                Keyword::COLUMNS,
-                Keyword::FIELDS,
-            ])
+            .parse_one_of_keywords(&[Keyword::COLUMNS, Keyword::FIELDS])
             .is_some()
         {
-            self.prev_token();
-            Ok(self.parse_show_columns()?)
+            Ok(self.parse_show_columns(extended, full)?)
+        } else if self.parse_keyword(Keyword::TABLES) {
+            Ok(self.parse_show_tables(extended, full)?)
+        } else if extended || full {
+            Err(ParserError::ParserError(
+                "EXTENDED/FULL are not supported with this type of SHOW query".to_string(),
+            ))
         } else if self.parse_one_of_keywords(&[Keyword::CREATE]).is_some() {
             Ok(self.parse_show_create()?)
         } else if self.parse_one_of_keywords(&[Keyword::VARIABLES]).is_some() {
@@ -2734,10 +2736,7 @@ impl<'a> Parser<'a> {
         Ok(Statement::ShowCreate { obj_type, obj_name })
     }
 
-    fn parse_show_columns(&mut self) -> Result<Statement, ParserError> {
-        let extended = self.parse_keyword(Keyword::EXTENDED);
-        let full = self.parse_keyword(Keyword::FULL);
-        self.expect_one_of_keywords(&[Keyword::COLUMNS, Keyword::FIELDS])?;
+    fn parse_show_columns(&mut self, extended: bool, full: bool) -> Result<Statement, ParserError> {
         self.expect_one_of_keywords(&[Keyword::FROM, Keyword::IN])?;
         let table_name = self.parse_object_name()?;
         let double_from = self.parse_one_of_keywords(&[Keyword::FROM, Keyword::IN]);
@@ -2761,6 +2760,20 @@ impl<'a> Parser<'a> {
             extended,
             full,
             table_name: object_name,
+            filter,
+        })
+    }
+
+    fn parse_show_tables(&mut self, extended: bool, full: bool) -> Result<Statement, ParserError> {
+        let db_name = match self.parse_one_of_keywords(&[Keyword::FROM, Keyword::IN]) {
+            Some(_) => Some(self.parse_identifier()?),
+            None => None,
+        };
+        let filter = self.parse_show_statement_filter()?;
+        Ok(Statement::ShowTables {
+            extended,
+            full,
+            db_name,
             filter,
         })
     }
