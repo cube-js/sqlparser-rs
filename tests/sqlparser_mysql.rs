@@ -163,6 +163,28 @@ fn parse_show_tables() {
 }
 
 #[test]
+fn parse_show_collation() {
+    assert_eq!(
+        mysql_and_generic().verified_stmt("SHOW COLLATION"),
+        Statement::ShowCollation { filter: None }
+    );
+    assert_eq!(
+        mysql_and_generic().verified_stmt("SHOW COLLATION LIKE 'pattern'"),
+        Statement::ShowCollation {
+            filter: Some(ShowStatementFilter::Like("pattern".into())),
+        }
+    );
+    assert_eq!(
+        mysql_and_generic().verified_stmt("SHOW COLLATION WHERE 1 = 2"),
+        Statement::ShowCollation {
+            filter: Some(ShowStatementFilter::Where(
+                mysql_and_generic().verified_expr("1 = 2")
+            )),
+        }
+    );
+}
+
+#[test]
 fn parse_use() {
     assert_eq!(
         mysql_and_generic().verified_stmt("USE database_name"),

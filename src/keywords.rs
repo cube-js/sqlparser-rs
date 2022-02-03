@@ -129,6 +129,7 @@ define_keywords!(
     CLUSTER,
     COALESCE,
     COLLATE,
+    COLLATION,
     COLLECT,
     COLUMN,
     COLUMNS,

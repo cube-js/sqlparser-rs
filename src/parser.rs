@@ -3572,6 +3572,8 @@ impl<'a> Parser<'a> {
             Err(ParserError::ParserError(
                 "EXTENDED/FULL are not supported with this type of SHOW query".to_string(),
             ))
+        } else if self.parse_keyword(Keyword::COLLATION) {
+            Ok(self.parse_show_collation()?)
         } else if self.parse_one_of_keywords(&[Keyword::CREATE]).is_some() {
             Ok(self.parse_show_create()?)
         } else if self.parse_one_of_keywords(&[Keyword::VARIABLES]).is_some() {
@@ -3649,6 +3651,11 @@ impl<'a> Parser<'a> {
             db_name,
             filter,
         })
+    }
+
+    fn parse_show_collation(&mut self) -> Result<Statement, ParserError> {
+        let filter = self.parse_show_statement_filter()?;
+        Ok(Statement::ShowCollation { filter })
     }
 
     fn parse_show_statement_filter(&mut self) -> Result<Option<ShowStatementFilter>, ParserError> {
