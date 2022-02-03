@@ -759,9 +759,7 @@ pub enum Statement {
     /// SHOW COLLATION
     ///
     /// Note: this is a MySQL-specific statement.
-    ShowCollation {
-        filter: Option<ShowStatementFilter>,
-    },
+    ShowCollation { filter: Option<ShowStatementFilter> },
     /// `{ BEGIN [ TRANSACTION | WORK ] | START TRANSACTION } ...`
     StartTransaction { modes: Vec<TransactionMode> },
     /// `SET TRANSACTION ...`

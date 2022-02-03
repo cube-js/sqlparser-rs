@@ -164,9 +164,7 @@ fn parse_show_tables() {
 fn parse_show_collation() {
     assert_eq!(
         mysql_and_generic().verified_stmt("SHOW COLLATION"),
-        Statement::ShowCollation {
-            filter: None,
-        }
+        Statement::ShowCollation { filter: None }
     );
     assert_eq!(
         mysql_and_generic().verified_stmt("SHOW COLLATION LIKE 'pattern'"),
