@@ -102,6 +102,16 @@ fn parse_show_columns() {
 }
 
 #[test]
+fn parse_use() {
+    assert_eq!(
+        mysql_and_generic().verified_stmt("USE database_name"),
+        Statement::Use {
+            db_name: Ident::new("database_name")
+        }
+    );
+}
+
+#[test]
 fn parse_show_create() {
     let obj_name = ObjectName(vec![Ident::new("myident")]);
 
