@@ -890,6 +890,10 @@ pub enum Statement {
     ///
     /// Note: this is a MySQL-specific statement.
     ShowCollation { filter: Option<ShowStatementFilter> },
+    /// USE
+    ///
+    /// Note: this is a MySQL-specific statement.
+    Use { db_name: Ident },
     /// `{ BEGIN [ TRANSACTION | WORK ] | START TRANSACTION } ...`
     StartTransaction { modes: Vec<TransactionMode> },
     /// `SET TRANSACTION ...`
@@ -1595,6 +1599,10 @@ impl fmt::Display for Statement {
                 if let Some(filter) = filter {
                     write!(f, " {}", filter)?;
                 }
+                Ok(())
+            }
+            Statement::Use { db_name } => {
+                write!(f, "USE {}", db_name)?;
                 Ok(())
             }
             Statement::StartTransaction { modes } => {
