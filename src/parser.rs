@@ -157,6 +157,7 @@ impl<'a> Parser<'a> {
                 Keyword::COPY => Ok(self.parse_copy()?),
                 Keyword::SET => Ok(self.parse_set()?),
                 Keyword::SHOW => Ok(self.parse_show()?),
+                Keyword::USE => Ok(self.parse_use()?),
                 Keyword::START => Ok(self.parse_start_transaction()?),
                 // `BEGIN` is a nonstandard but common alias for the
                 // standard `START TRANSACTION` statement. It is supported
@@ -2799,6 +2800,11 @@ impl<'a> Parser<'a> {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn parse_use(&mut self) -> Result<Statement, ParserError> {
+        let db_name = self.parse_identifier()?;
+        Ok(Statement::Use { db_name })
     }
 
     pub fn parse_table_and_joins(&mut self) -> Result<TableWithJoins, ParserError> {
