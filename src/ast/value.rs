@@ -64,6 +64,8 @@ pub enum Value {
     },
     /// `NULL` value
     Null,
+    /// `?` or `$` Prepared statement arg placeholder
+    Placeholder(String),
 }
 
 impl fmt::Display for Value {
@@ -117,6 +119,7 @@ impl fmt::Display for Value {
                 Ok(())
             }
             Value::Null => write!(f, "NULL"),
+            Value::Placeholder(v) => write!(f, "{}", v),
         }
     }
 }
