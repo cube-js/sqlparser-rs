@@ -3681,6 +3681,17 @@ impl<'a> Parser<'a> {
                     .to_vec(),
                 });
             }
+        } else if self.parse_keyword(Keyword::ROLE) {
+            let role_name = if self.parse_keyword(Keyword::NONE) {
+                None
+            } else {
+                Some(self.parse_identifier()?)
+            };
+            return Ok(Statement::SetRole {
+                local: modifier == Some(Keyword::LOCAL),
+                session: modifier == Some(Keyword::SESSION),
+                role_name,
+            });
         }
 
         let mut key_values: Vec<SetVariableKeyValue> = vec![];
