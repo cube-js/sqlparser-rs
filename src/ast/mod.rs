@@ -323,6 +323,11 @@ pub enum Expr {
     },
     /// An array expression e.g. `ARRAY[1, 2]`
     Array(Array),
+    /// An expression with field access, such as `SELECT (udf_returning_struct()).field`
+    DotExpr {
+        expr: Box<Expr>,
+        field: Ident,
+    },
 }
 
 impl fmt::Display for Expr {
@@ -507,6 +512,9 @@ impl fmt::Display for Expr {
             }
             Expr::Array(set) => {
                 write!(f, "{}", set)
+            }
+            Expr::DotExpr { expr, field } => {
+                write!(f, "{}.{}", expr, field)
             }
         }
     }
@@ -2457,7 +2465,7 @@ impl fmt::Display for CopyLegacyCsvOption {
     }
 }
 
-///  
+///
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MergeClause {
