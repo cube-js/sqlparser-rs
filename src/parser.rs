@@ -518,7 +518,14 @@ impl<'a> Parser<'a> {
                         }
                     };
                 self.expect_token(&Token::RParen)?;
-                Ok(expr)
+                if !self.consume_token(&Token::Period) {
+                    return Ok(expr);
+                }
+
+                Ok(Expr::DotExpr {
+                    expr: Box::new(expr),
+                    field: self.parse_identifier()?,
+                })
             }
             Token::Placeholder(_) => {
                 self.prev_token();
