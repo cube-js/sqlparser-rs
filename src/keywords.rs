@@ -380,6 +380,7 @@ define_keywords!(
     PRECEDING,
     PRECISION,
     PREPARE,
+    PRESERVE,
     PRIMARY,
     PRIVILEGES,
     PROCEDURE,

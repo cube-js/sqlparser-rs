@@ -2499,10 +2499,12 @@ fn parse_expr_interval() {
                 value: "HOUR".to_string(),
                 quote_style: None,
             }]),
-            args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::Identifier(Ident {
-                value: "order_date".to_string(),
-                quote_style: None,
-            })))],
+            args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
+                Expr::Identifier(Ident {
+                    value: "order_date".to_string(),
+                    quote_style: None,
+                }),
+            ))],
             over: None,
             distinct: false,
         });
@@ -2528,10 +2530,12 @@ fn parse_expr_interval() {
                 value: "QUARTER".to_string(),
                 quote_style: None,
             }]),
-            args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::Identifier(Ident {
-                value: "order_date".to_string(),
-                quote_style: None,
-            })))],
+            args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
+                Expr::Identifier(Ident {
+                    value: "order_date".to_string(),
+                    quote_style: None,
+                }),
+            ))],
             over: None,
             distinct: false,
         });
