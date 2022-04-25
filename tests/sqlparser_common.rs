@@ -4903,3 +4903,16 @@ fn parse_cursor() {
         _ => unreachable!(),
     }
 }
+
+#[test]
+fn parse_position() {
+    let sql = "SELECT POSITION('@' IN field)";
+    let select = verified_only_select(sql);
+    assert_eq!(
+        &Expr::Position {
+            expr: Box::new(Expr::Value(Value::SingleQuotedString("@".to_string()))),
+            r#in: Box::new(Expr::Identifier(Ident::new("field"))),
+        },
+        expr_from_projection(only(&select.projection))
+    );
+}
