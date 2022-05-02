@@ -4717,3 +4717,25 @@ fn parse_time_functions() {
     // Validating Parenthesis
     one_statement_parses_to("SELECT CURRENT_DATE", sql);
 }
+
+#[test]
+fn parse_is_boolean() {
+    one_statement_parses_to(
+        "SELECT f from foo where field is true",
+        "SELECT f FROM foo WHERE field = true",
+    );
+
+    one_statement_parses_to(
+        "SELECT f from foo where field is false",
+        "SELECT f FROM foo WHERE field = false",
+    );
+
+    let sql = "SELECT f from foo where field is 0";
+    let res = parse_sql_statements(sql);
+    assert_eq!(
+        ParserError::ParserError(
+            "Expected [NOT] NULL or [NOT] DISTINCT FROM TRUE FALSE after IS, found: 0".to_string()
+        ),
+        res.unwrap_err()
+    );
+}
