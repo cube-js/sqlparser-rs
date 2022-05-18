@@ -858,6 +858,11 @@ pub enum Statement {
         /// deleted along with the dropped table
         purge: bool,
     },
+    /// DISCARD [ ALL | PLANS | SEQUENCES | TEMPORARY | TEMP ]
+    ///
+    /// Note: this is a PostgreSQL-specific statement,
+    /// but may also compatible with other SQL.
+    Discard { object_type: DiscardObject },
     /// SET <variable>
     ///
     /// Note: this is not a standard SQL statement, but it is supported by at
@@ -1534,7 +1539,10 @@ impl fmt::Display for Statement {
                 if *cascade { " CASCADE" } else { "" },
                 if *purge { " PURGE" } else { "" }
             ),
-
+            Statement::Discard { object_type } => {
+                write!(f, "DISCARD {object_type}", object_type = object_type)?;
+                Ok(())
+            }
             Statement::SetVariable { key_values } => {
                 f.write_str("SET ")?;
 
@@ -2561,6 +2569,26 @@ impl fmt::Display for MergeClause {
                     values
                 )
             }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum DiscardObject {
+    ALL,
+    PLANS,
+    SEQUENCES,
+    TEMP,
+}
+
+impl fmt::Display for DiscardObject {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DiscardObject::ALL => f.write_str("ALL"),
+            DiscardObject::PLANS => f.write_str("PLANS"),
+            DiscardObject::SEQUENCES => f.write_str("SEQUENCES"),
+            DiscardObject::TEMP => f.write_str("TEMP"),
         }
     }
 }
