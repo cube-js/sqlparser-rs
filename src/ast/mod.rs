@@ -1863,7 +1863,7 @@ impl fmt::Display for Statement {
                             key_value
                                 .value
                                 .iter()
-                                .map(|value| format!("{} = {}", key_value.key, value.to_string()))
+                                .map(|value| format!("{} = {}", key_value.key, value))
                                 .collect::<Vec<String>>()
                                 .join(", ")
                         )
@@ -1896,7 +1896,7 @@ impl fmt::Display for Statement {
             Statement::ShowVariables { filter } => {
                 write!(f, "SHOW VARIABLES")?;
                 if filter.is_some() {
-                    write!(f, " {}", filter.as_ref().unwrap().to_string())?;
+                    write!(f, " {}", filter.as_ref().unwrap())?;
                 }
                 Ok(())
             }

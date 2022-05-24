@@ -224,6 +224,11 @@ fn parse_set_transaction() {
 fn parse_set_variables() {
     let stmt = mysql_and_generic().verified_stmt("SET autocommit = 1, sql_mode = 'test'");
 
+    #[cfg(feature = "bigdecimal")]
+    let value = Expr::Value(Value::Number(bigdecimal::BigDecimal::from(1_i64), false));
+    #[cfg(not(feature = "bigdecimal"))]
+    let value = Expr::Value(Value::Number("1".into(), false));
+
     assert_eq!(
         stmt,
         Statement::SetVariable {
@@ -232,13 +237,7 @@ fn parse_set_variables() {
                     local: false,
                     hivevar: false,
                     key: ObjectName(vec![Ident::new("autocommit")]),
-                    value: vec![Expr::Value(Value::Number(
-                        #[cfg(not(feature = "bigdecimal"))]
-                        "1".into(),
-                        #[cfg(feature = "bigdecimal")]
-                        bigdecimal::BigDecimal::from(1),
-                        false
-                    ))],
+                    value: vec![value.clone()],
                 },
                 SetVariableKeyValue {
                     local: false,
@@ -262,14 +261,9 @@ fn parse_set_variables() {
                 local: true,
                 hivevar: false,
                 key: ObjectName(vec![Ident::new("autocommit")]),
-                value: vec![Expr::Value(Value::Number(
-                    #[cfg(not(feature = "bigdecimal"))]
-                    "1".into(),
-                    #[cfg(feature = "bigdecimal")]
-                    bigdecimal::BigDecimal::from(1),
-                    false
-                ))],
-            },],
+                value: vec![value],
+            },]
+            .to_vec()
         }
     );
 }

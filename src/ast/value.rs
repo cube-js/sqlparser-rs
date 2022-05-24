@@ -97,9 +97,7 @@ impl fmt::Display for Value {
                 write!(
                     f,
                     "INTERVAL {} SECOND ({}, {})",
-                    value.to_string(),
-                    leading_precision,
-                    fractional_seconds_precision
+                    value, leading_precision, fractional_seconds_precision
                 )
             }
             Value::Interval {
@@ -109,7 +107,7 @@ impl fmt::Display for Value {
                 last_field,
                 fractional_seconds_precision,
             } => {
-                write!(f, "INTERVAL {}", value.to_string())?;
+                write!(f, "INTERVAL {}", value)?;
 
                 if let Some(leading_field) = leading_field {
                     write!(f, " {}", leading_field)?;
