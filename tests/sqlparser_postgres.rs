@@ -805,6 +805,12 @@ fn parse_set() {
     );
 
     let stmt = pg_and_generic().verified_stmt("SET a = 0");
+
+    #[cfg(feature = "bigdecimal")]
+    let value = Expr::Value(Value::Number(bigdecimal::BigDecimal::from(0_i64), false));
+    #[cfg(not(feature = "bigdecimal"))]
+    let value = Expr::Value(Value::Number("0".into(), false));
+
     assert_eq!(
         stmt,
         Statement::SetVariable {
@@ -812,7 +818,7 @@ fn parse_set() {
                 local: false,
                 hivevar: false,
                 key: "a".into(),
-                value: vec![Expr::Value(Value::Number("0".into(), false))],
+                value: vec![value],
             }]
             .to_vec()
         }
