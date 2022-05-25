@@ -589,7 +589,7 @@ fn test_copy_to() {
 
 #[test]
 fn parse_copy_from() {
-    let sql = "COPY table (a, b) FROM 'file.csv' WITH 
+    let sql = "COPY table (a, b) FROM 'file.csv' WITH
     (
         FORMAT CSV,
         FREEZE,
@@ -1333,6 +1333,30 @@ fn parse_escaped_literal_string() {
         pg().parse_sql_statements(sql).unwrap_err().to_string(),
         "sql parser error: Unterminated encoded string literal at Line: 1, Column 8"
     );
+}
+
+#[test]
+fn parse_fetch() {
+    pg_and_generic().verified_stmt("FETCH 2048 IN \"SQL_CUR0x7fa44801bc00\"");
+    pg_and_generic().verified_stmt("FETCH 2048 IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic().verified_stmt("FETCH NEXT IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic().verified_stmt("FETCH PRIOR IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic().verified_stmt("FETCH FIRST IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic().verified_stmt("FETCH LAST IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic()
+        .verified_stmt("FETCH ABSOLUTE 2048 IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic()
+        .verified_stmt("FETCH RELATIVE 2048 IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic().verified_stmt("FETCH ALL IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic().verified_stmt("FETCH ALL IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic()
+        .verified_stmt("FETCH FORWARD 2048 IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic()
+        .verified_stmt("FETCH FORWARD ALL IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic()
+        .verified_stmt("FETCH BACKWARD 2048 IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
+    pg_and_generic()
+        .verified_stmt("FETCH BACKWARD ALL IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
 }
 
 #[test]
