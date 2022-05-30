@@ -507,6 +507,7 @@ fn parse_select_count_wildcard() {
             args: vec![FunctionArg::Unnamed(FunctionArgExpr::Wildcard)],
             over: None,
             distinct: false,
+            special: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -525,6 +526,7 @@ fn parse_select_count_distinct() {
             }))],
             over: None,
             distinct: true,
+            special: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -1329,6 +1331,7 @@ fn parse_select_having() {
                 args: vec![FunctionArg::Unnamed(FunctionArgExpr::Wildcard)],
                 over: None,
                 distinct: false,
+                special: false,
             })),
             op: BinaryOperator::Gt,
             right: Box::new(Expr::Value(number("1")))
@@ -2318,6 +2321,7 @@ fn parse_scalar_function_in_projection() {
                 ))],
                 over: None,
                 distinct: false,
+                special: false,
             }),
             expr_from_projection(only(&select.projection))
         );
@@ -2396,6 +2400,7 @@ fn parse_named_argument_function() {
             ],
             over: None,
             distinct: false,
+            special: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -2429,6 +2434,7 @@ fn parse_window_functions() {
                 window_frame: None,
             }),
             distinct: false,
+            special: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -2537,6 +2543,7 @@ fn parse_expr_interval() {
             ))],
             over: None,
             distinct: false,
+            special: false,
         });
 
         assert_eq!(
@@ -2568,6 +2575,7 @@ fn parse_expr_interval() {
             ))],
             over: None,
             distinct: false,
+            special: false,
         });
         assert_eq!(
             &Expr::Value(Value::Interval {
@@ -2722,6 +2730,7 @@ fn parse_table_function() {
                 )))],
                 over: None,
                 distinct: false,
+                special: false,
             });
             assert_eq!(expr, expected_expr);
             assert_eq!(alias, table_alias("a"))
@@ -2778,6 +2787,7 @@ fn parse_delimited_identifiers() {
             args: vec![],
             over: None,
             distinct: false,
+            special: false,
         }),
         expr_from_projection(&select.projection[1]),
     );
@@ -4680,6 +4690,7 @@ fn parse_time_functions() {
             args: vec![],
             over: None,
             distinct: false,
+            special: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -4695,6 +4706,7 @@ fn parse_time_functions() {
             args: vec![],
             over: None,
             distinct: false,
+            special: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -4710,6 +4722,7 @@ fn parse_time_functions() {
             args: vec![],
             over: None,
             distinct: false,
+            special: false,
         }),
         expr_from_projection(&select.projection[0])
     );

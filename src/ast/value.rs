@@ -93,7 +93,7 @@ impl fmt::Display for Value {
                 assert!(last_field.is_none());
                 write!(
                     f,
-                    "INTERVAL '{}' SECOND ({}, {})",
+                    "INTERVAL {} SECOND ({}, {})",
                     value, leading_precision, fractional_seconds_precision
                 )
             }

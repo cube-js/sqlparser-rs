@@ -692,7 +692,8 @@ fn parse_insert_with_on_duplicate_update() {
                                 Expr::Identifier(Ident::new("description"))
                             ))],
                             over: None,
-                            distinct: false
+                            distinct: false,
+                            special: false,
                         })
                     },
                     Assignment {
@@ -703,7 +704,8 @@ fn parse_insert_with_on_duplicate_update() {
                                 Expr::Identifier(Ident::new("perm_create"))
                             ))],
                             over: None,
-                            distinct: false
+                            distinct: false,
+                            special: false,
                         })
                     },
                     Assignment {
@@ -714,7 +716,8 @@ fn parse_insert_with_on_duplicate_update() {
                                 Expr::Identifier(Ident::new("perm_read"))
                             ))],
                             over: None,
-                            distinct: false
+                            distinct: false,
+                            special: false,
                         })
                     },
                     Assignment {
@@ -725,7 +728,8 @@ fn parse_insert_with_on_duplicate_update() {
                                 Expr::Identifier(Ident::new("perm_update"))
                             ))],
                             over: None,
-                            distinct: false
+                            distinct: false,
+                            special: false,
                         })
                     },
                     Assignment {
@@ -736,7 +740,8 @@ fn parse_insert_with_on_duplicate_update() {
                                 Expr::Identifier(Ident::new("perm_delete"))
                             ))],
                             over: None,
-                            distinct: false
+                            distinct: false,
+                            special: false,
                         })
                     },
                 ])),

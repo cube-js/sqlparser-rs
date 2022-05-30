@@ -1336,6 +1336,52 @@ fn parse_escaped_literal_string() {
 }
 
 #[test]
+fn parse_current_functions() {
+    let sql = "SELECT CURRENT_CATALOG, CURRENT_USER, SESSION_USER, USER";
+    let select = pg_and_generic().verified_only_select(sql);
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("CURRENT_CATALOG")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[0])
+    );
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("CURRENT_USER")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[1])
+    );
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("SESSION_USER")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[2])
+    );
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("USER")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[3])
+    );
+}
+
+#[test]
 fn parse_fetch() {
     pg_and_generic().verified_stmt("FETCH 2048 IN \"SQL_CUR0x7fa44801bc00\"");
     pg_and_generic().verified_stmt("FETCH 2048 IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
