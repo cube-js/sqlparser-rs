@@ -1400,6 +1400,7 @@ fn test_composite_value() {
                 )))],
                 over: None,
                 distinct: false,
+                special: false
             }))))
         }),
         select.projection[0]
@@ -1514,6 +1515,52 @@ fn parse_escaped_literal_string() {
     assert_eq!(
         pg().parse_sql_statements(sql).unwrap_err().to_string(),
         "sql parser error: Unterminated encoded string literal at Line: 1, Column 8"
+    );
+}
+
+#[test]
+fn parse_current_functions() {
+    let sql = "SELECT CURRENT_CATALOG, CURRENT_USER, SESSION_USER, USER";
+    let select = pg_and_generic().verified_only_select(sql);
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("CURRENT_CATALOG")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[0])
+    );
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("CURRENT_USER")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[1])
+    );
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("SESSION_USER")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[2])
+    );
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec![Ident::new("USER")]),
+            args: vec![],
+            over: None,
+            distinct: false,
+            special: true,
+        }),
+        expr_from_projection(&select.projection[3])
     );
 }
 
