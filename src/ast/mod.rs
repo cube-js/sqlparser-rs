@@ -327,6 +327,8 @@ pub enum Expr {
     },
     /// An array expression e.g. `ARRAY[1, 2]`
     Array(Array),
+    /// An array subquery constructor, e.g. `array(SELECT 1 UNION SELECT 2)`
+    ArraySubquery(Box<Query>),
     /// An expression with field access, such as `SELECT (udf_returning_struct()).field`
     DotExpr {
         expr: Box<Expr>,
@@ -440,6 +442,7 @@ impl fmt::Display for Expr {
             }
             Expr::Exists(s) => write!(f, "EXISTS ({})", s),
             Expr::Subquery(s) => write!(f, "({})", s),
+            Expr::ArraySubquery(s) => write!(f, "ARRAY({})", s),
             Expr::ListAgg(listagg) => write!(f, "{}", listagg),
             Expr::GroupingSets(sets) => {
                 write!(f, "GROUPING SETS (")?;
