@@ -451,6 +451,13 @@ impl<'a> Parser<'a> {
                     self.expect_token(&Token::LBracket)?;
                     self.parse_array_expr(true)
                 }
+                Keyword::ARRAY
+                    if dialect_of!(self is PostgreSqlDialect | GenericDialect)
+                        && self.peek_token() == Token::LParen =>
+                {
+                    self.expect_token(&Token::LParen)?;
+                    self.parse_array_subquery()
+                }
                 Keyword::NOT => Ok(Expr::UnaryOp {
                     op: UnaryOperator::Not,
                     expr: Box::new(self.parse_subexpr(Self::UNARY_NOT_PREC)?),
@@ -880,6 +887,13 @@ impl<'a> Parser<'a> {
         let exprs = self.parse_comma_separated(Parser::parse_expr)?;
         self.expect_token(&Token::RBracket)?;
         Ok(Expr::Array(Array { elem: exprs, named }))
+    }
+
+    /// Parses an array subquery `ARRAY(SELECT 1 UNION SELECT 2)`
+    pub fn parse_array_subquery(&mut self) -> Result<Expr, ParserError> {
+        let subquery = self.parse_query()?;
+        self.expect_token(&Token::RParen)?;
+        Ok(Expr::ArraySubquery(Box::new(subquery)))
     }
 
     /// Parse a SQL LISTAGG expression, e.g. `LISTAGG(...) WITHIN GROUP (ORDER BY ...)`.

@@ -2307,7 +2307,7 @@ fn parse_bad_constraint() {
 
 #[test]
 fn parse_scalar_function_in_projection() {
-    let names = vec!["sqrt", "array", "foo"];
+    let names = vec!["sqrt", "foo"];
 
     for function_name in names {
         // like SELECT sqrt(id) FROM foo
