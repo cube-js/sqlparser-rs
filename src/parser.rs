@@ -4243,7 +4243,7 @@ impl<'a> Parser<'a> {
         if self.parse_keyword(Keyword::ALL) {
             Ok(None)
         } else {
-            Ok(Some(Expr::Value(self.parse_number_value()?)))
+            Ok(Some(self.parse_expr()?))
         }
     }
 
