@@ -4667,6 +4667,13 @@ fn test_placeholder() {
             right: Box::new(Expr::Value(Value::Placeholder("$Id1".into())))
         })
     );
+
+    let sql = "SELECT * FROM student LIMIT $1";
+    let ast = dialects.verified_query(sql);
+    assert_eq!(
+        ast.limit,
+        Some(Expr::Value(Value::Placeholder("$1".into())))
+    );
 }
 
 #[test]
