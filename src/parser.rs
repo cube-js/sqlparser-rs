@@ -3781,7 +3781,7 @@ impl<'a> Parser<'a> {
             if !table_and_joins.joins.is_empty() || is_nested_join {
                 self.expect_token(&Token::RParen)?;
                 Ok(TableFactor::NestedJoin(Box::new(table_and_joins))) // (A)
-            } else if dialect_of!(self is SnowflakeDialect | GenericDialect) {
+            } else if dialect_of!(self is SnowflakeDialect | GenericDialect | PostgreSqlDialect) {
                 // Dialect-specific behavior: Snowflake diverges from the
                 // standard and from most of the other implementations by
                 // allowing extra parentheses not only around a join (B), but
