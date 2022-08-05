@@ -24,7 +24,8 @@ mod test_utils;
 use matches::assert_matches;
 use sqlparser::ast::*;
 use sqlparser::dialect::{
-    AnsiDialect, GenericDialect, MsSqlDialect, PostgreSqlDialect, SQLiteDialect, SnowflakeDialect,
+    AnsiDialect, ClickHouseDialect, GenericDialect, MsSqlDialect, PostgreSqlDialect, SQLiteDialect,
+    SnowflakeDialect,
 };
 use sqlparser::keywords::ALL_KEYWORDS;
 use sqlparser::parser::{Parser, ParserError};
@@ -485,7 +486,7 @@ fn test_eof_after_as() {
 
 #[test]
 fn test_no_infix_error() {
-    let res = Parser::parse_sql(&GenericDialect {}, "ASSERT-URA<<");
+    let res = Parser::parse_sql(&ClickHouseDialect {}, "ASSERT-URA<<");
     assert_eq!(
         ParserError::ParserError("No infix parser for token ShiftLeft".to_string()),
         res.unwrap_err()
