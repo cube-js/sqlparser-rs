@@ -846,7 +846,7 @@ impl<'a> Parser<'a> {
                 r#in: Box::new(from),
             })
         } else {
-            return parser_err!("Position function must include IN keyword".to_string());
+            parser_err!("Position function must include IN keyword".to_string())
         }
     }
 
