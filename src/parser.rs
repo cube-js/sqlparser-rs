@@ -2024,12 +2024,17 @@ impl<'a> Parser<'a> {
                 Keyword::UUID => Ok(DataType::Uuid),
                 Keyword::DATE => Ok(DataType::Date),
                 Keyword::TIMESTAMP => {
-                    // TBD: we throw away "with/without timezone" information
-                    if self.parse_keyword(Keyword::WITH) || self.parse_keyword(Keyword::WITHOUT) {
+                    if self.parse_keyword(Keyword::WITH) {
                         self.expect_keywords(&[Keyword::TIME, Keyword::ZONE])?;
+                        Ok(DataType::TimestampTz)
+                    } else if self.parse_keyword(Keyword::WITHOUT) {
+                        self.expect_keywords(&[Keyword::TIME, Keyword::ZONE])?;
+                        Ok(DataType::Timestamp)
+                    } else {
+                        Ok(DataType::Timestamp)
                     }
-                    Ok(DataType::Timestamp)
                 }
+                Keyword::TIMESTAMPTZ => Ok(DataType::TimestampTz),
                 Keyword::TIME => {
                     // TBD: we throw away "with/without timezone" information
                     if self.parse_keyword(Keyword::WITH) || self.parse_keyword(Keyword::WITHOUT) {

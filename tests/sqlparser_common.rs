@@ -1893,7 +1893,7 @@ fn parse_literal_time() {
 }
 
 #[test]
-fn parse_literal_timestamp() {
+fn parse_literal_timestamp_without_time_zone() {
     let sql = "SELECT TIMESTAMP '1999-01-01 01:23:34'";
     let select = verified_only_select(sql);
     assert_eq!(
@@ -1902,6 +1902,29 @@ fn parse_literal_timestamp() {
             value: "1999-01-01 01:23:34".into()
         },
         expr_from_projection(only(&select.projection)),
+    );
+
+    one_statement_parses_to(
+        "SELECT TIMESTAMP WITHOUT TIME ZONE '1999-01-01 01:23:34'",
+        sql,
+    );
+}
+
+#[test]
+fn parse_literal_timestamp_with_time_zone() {
+    let sql = "SELECT TIMESTAMPTZ '1999-01-01 01:23:34Z'";
+    let select = verified_only_select(sql);
+    assert_eq!(
+        &Expr::TypedString {
+            data_type: DataType::TimestampTz,
+            value: "1999-01-01 01:23:34Z".into()
+        },
+        expr_from_projection(only(&select.projection)),
+    );
+
+    one_statement_parses_to(
+        "SELECT TIMESTAMP WITH TIME ZONE '1999-01-01 01:23:34Z'",
+        sql,
     );
 }
 
@@ -2715,10 +2738,10 @@ fn parse_scalar_subqueries() {
     assert_matches!(
         verified_expr(sql),
         Expr::BinaryOp {
-        op: BinaryOperator::Plus, ..
-        //left: box Subquery { .. },
-        //right: box Subquery { .. },
-    }
+            op: BinaryOperator::Plus,
+            .. //left: box Subquery { .. },
+               //right: box Subquery { .. },
+        }
     );
 }
 

@@ -616,7 +616,7 @@ impl<'a> Tokenizer<'a> {
                                 'r' => s.push('\r'),
                                 't' => s.push('\t'),
                                 'Z' => s.push('\x1a'),
-                                x => s.push(x)
+                                x => s.push(x),
                             }
                         }
                     }
