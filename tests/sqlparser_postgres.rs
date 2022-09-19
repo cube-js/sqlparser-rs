@@ -1683,3 +1683,56 @@ fn parse_fetch() {
     pg_and_generic()
         .verified_stmt("FETCH BACKWARD ALL IN \"SQL_CUR0x7fa44801bc00\" INTO \"new_table\"");
 }
+
+#[test]
+fn parse_interval_math() {
+    let sql = "SELECT INTERVAL '1 DAY' + INTERVAL '2 DAY'";
+    let select = pg_and_generic().verified_only_select(sql);
+    assert_eq!(
+        &Expr::BinaryOp {
+            left: Box::new(Expr::Value(Value::Interval {
+                value: Box::new(Expr::Value(Value::SingleQuotedString("1 DAY".to_string()))),
+                leading_field: None,
+                leading_precision: None,
+                last_field: None,
+                fractional_seconds_precision: None,
+            })),
+            op: BinaryOperator::Plus,
+            right: Box::new(Expr::Value(Value::Interval {
+                value: Box::new(Expr::Value(Value::SingleQuotedString("2 DAY".to_string()))),
+                leading_field: None,
+                leading_precision: None,
+                last_field: None,
+                fractional_seconds_precision: None,
+            })),
+        },
+        expr_from_projection(only(&select.projection)),
+    );
+
+    let sql = "SELECT INTERVAL '1' || ' DAY' + INTERVAL '2 DAY'";
+    let select = pg_and_generic().verified_only_select(sql);
+    assert_eq!(
+        &Expr::BinaryOp {
+            left: Box::new(Expr::Value(Value::Interval {
+                value: Box::new(Expr::BinaryOp {
+                    left: Box::new(Expr::Value(Value::SingleQuotedString("1".to_string()))),
+                    op: BinaryOperator::StringConcat,
+                    right: Box::new(Expr::Value(Value::SingleQuotedString(" DAY".to_string()))),
+                }),
+                leading_field: None,
+                leading_precision: None,
+                last_field: None,
+                fractional_seconds_precision: None,
+            })),
+            op: BinaryOperator::Plus,
+            right: Box::new(Expr::Value(Value::Interval {
+                value: Box::new(Expr::Value(Value::SingleQuotedString("2 DAY".to_string()))),
+                leading_field: None,
+                leading_precision: None,
+                last_field: None,
+                fractional_seconds_precision: None,
+            })),
+        },
+        expr_from_projection(only(&select.projection)),
+    );
+}

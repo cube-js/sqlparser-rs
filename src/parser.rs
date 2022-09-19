@@ -1095,7 +1095,12 @@ impl<'a> Parser<'a> {
 
         // The first token in an interval is a string literal which specifies
         // the duration of the interval.
-        let value = self.parse_subexpr(Self::PLUS_MINUS_PREC)?;
+        let value = if dialect_of!(self is PostgreSqlDialect | RedshiftSqlDialect | GenericDialect)
+        {
+            self.parse_subexpr(Self::PLUS_MINUS_PREC)
+        } else {
+            self.parse_expr()
+        }?;
 
         // Following the string literal is a qualifier which indicates the units
         // of the duration specified in the string literal.
