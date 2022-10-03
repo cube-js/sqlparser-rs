@@ -446,6 +446,7 @@ define_keywords!(
     TIME,
     TIMESTAMP,
     TIMESTAMPTZ,
+    TIMETZ,
     TIMEZONE,
     TIMEZONE_HOUR,
     TIMEZONE_MINUTE,

@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 pub use self::data_type::DataType;
+pub use self::data_type::TimezoneInfo;
 pub use self::ddl::{
     AlterTableOperation, ColumnDef, ColumnOption, ColumnOptionDef, ReferentialAction,
     TableConstraint,

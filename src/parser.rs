@@ -2026,22 +2026,27 @@ impl<'a> Parser<'a> {
                 Keyword::TIMESTAMP => {
                     if self.parse_keyword(Keyword::WITH) {
                         self.expect_keywords(&[Keyword::TIME, Keyword::ZONE])?;
-                        Ok(DataType::TimestampTz)
+                        Ok(DataType::Timestamp(TimezoneInfo::WithTimeZone))
                     } else if self.parse_keyword(Keyword::WITHOUT) {
                         self.expect_keywords(&[Keyword::TIME, Keyword::ZONE])?;
-                        Ok(DataType::Timestamp)
+                        Ok(DataType::Timestamp(TimezoneInfo::WithoutTimeZone))
                     } else {
-                        Ok(DataType::Timestamp)
+                        Ok(DataType::Timestamp(TimezoneInfo::None))
                     }
                 }
-                Keyword::TIMESTAMPTZ => Ok(DataType::TimestampTz),
+                Keyword::TIMESTAMPTZ => Ok(DataType::Timestamp(TimezoneInfo::Tz)),
                 Keyword::TIME => {
-                    // TBD: we throw away "with/without timezone" information
-                    if self.parse_keyword(Keyword::WITH) || self.parse_keyword(Keyword::WITHOUT) {
+                    if self.parse_keyword(Keyword::WITH) {
                         self.expect_keywords(&[Keyword::TIME, Keyword::ZONE])?;
+                        Ok(DataType::Time(TimezoneInfo::WithTimeZone))
+                    } else if self.parse_keyword(Keyword::WITHOUT) {
+                        self.expect_keywords(&[Keyword::TIME, Keyword::ZONE])?;
+                        Ok(DataType::Time(TimezoneInfo::WithoutTimeZone))
+                    } else {
+                        Ok(DataType::Time(TimezoneInfo::None))
                     }
-                    Ok(DataType::Time)
                 }
+                Keyword::TIMETZ => Ok(DataType::Time(TimezoneInfo::Tz)),
                 // Interval types can be followed by a complicated interval
                 // qualifier that we don't currently support. See
                 // parse_interval_literal for a taste.
