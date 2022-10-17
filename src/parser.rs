@@ -820,7 +820,9 @@ impl<'a> Parser<'a> {
 
     pub fn parse_extract_expr(&mut self) -> Result<Expr, ParserError> {
         self.expect_token(&Token::LParen)?;
-        let field = self.parse_date_time_field()?;
+        let field_parsable_as_string =
+            dialect_of!(self is GenericDialect | PostgreSqlDialect | RedshiftSqlDialect);
+        let field = self.parse_date_time_field(field_parsable_as_string)?;
         self.expect_keyword(Keyword::FROM)?;
         let expr = self.parse_expr()?;
         self.expect_token(&Token::RParen)?;
@@ -1045,34 +1047,45 @@ impl<'a> Parser<'a> {
     // operator and interval qualifiers. EXTRACT supports a wider set of
     // date/time fields than interval qualifiers, so this function may need to
     // be split in two.
-    pub fn parse_date_time_field(&mut self) -> Result<DateTimeField, ParserError> {
-        match self.next_token() {
-            Token::Word(w) => match w.keyword {
-                Keyword::YEAR => Ok(DateTimeField::Year),
-                Keyword::MONTH => Ok(DateTimeField::Month),
-                Keyword::WEEK => Ok(DateTimeField::Week),
-                Keyword::DAY => Ok(DateTimeField::Day),
-                Keyword::HOUR => Ok(DateTimeField::Hour),
-                Keyword::MINUTE => Ok(DateTimeField::Minute),
-                Keyword::SECOND => Ok(DateTimeField::Second),
-                Keyword::CENTURY => Ok(DateTimeField::Century),
-                Keyword::DECADE => Ok(DateTimeField::Decade),
-                Keyword::DOY => Ok(DateTimeField::Doy),
-                Keyword::DOW => Ok(DateTimeField::Dow),
-                Keyword::EPOCH => Ok(DateTimeField::Epoch),
-                Keyword::ISODOW => Ok(DateTimeField::Isodow),
-                Keyword::ISOYEAR => Ok(DateTimeField::Isoyear),
-                Keyword::JULIAN => Ok(DateTimeField::Julian),
-                Keyword::MICROSECONDS => Ok(DateTimeField::Microseconds),
-                Keyword::MILLENIUM => Ok(DateTimeField::Millenium),
-                Keyword::MILLISECONDS => Ok(DateTimeField::Milliseconds),
-                Keyword::QUARTER => Ok(DateTimeField::Quarter),
-                Keyword::TIMEZONE => Ok(DateTimeField::Timezone),
-                Keyword::TIMEZONE_HOUR => Ok(DateTimeField::TimezoneHour),
-                Keyword::TIMEZONE_MINUTE => Ok(DateTimeField::TimezoneMinute),
-                _ => self.expected("date/time field", Token::Word(w))?,
+    pub fn parse_date_time_field(
+        &mut self,
+        parsable_as_str: bool,
+    ) -> Result<DateTimeField, ParserError> {
+        let token = self.next_token();
+
+        let date_time_field = match &token {
+            Token::Word(w) => w.keyword,
+            Token::SingleQuotedString(s) if parsable_as_str => match Token::make_keyword(s) {
+                Token::Word(w) => w.keyword,
+                _ => self.expected("date/time field", token.clone())?,
             },
-            unexpected => self.expected("date/time field", unexpected),
+            _ => self.expected("date/time field", token.clone())?,
+        };
+
+        match date_time_field {
+            Keyword::YEAR => Ok(DateTimeField::Year),
+            Keyword::MONTH => Ok(DateTimeField::Month),
+            Keyword::WEEK => Ok(DateTimeField::Week),
+            Keyword::DAY => Ok(DateTimeField::Day),
+            Keyword::HOUR => Ok(DateTimeField::Hour),
+            Keyword::MINUTE => Ok(DateTimeField::Minute),
+            Keyword::SECOND => Ok(DateTimeField::Second),
+            Keyword::CENTURY => Ok(DateTimeField::Century),
+            Keyword::DECADE => Ok(DateTimeField::Decade),
+            Keyword::DOY => Ok(DateTimeField::Doy),
+            Keyword::DOW => Ok(DateTimeField::Dow),
+            Keyword::EPOCH => Ok(DateTimeField::Epoch),
+            Keyword::ISODOW => Ok(DateTimeField::Isodow),
+            Keyword::ISOYEAR => Ok(DateTimeField::Isoyear),
+            Keyword::JULIAN => Ok(DateTimeField::Julian),
+            Keyword::MICROSECONDS => Ok(DateTimeField::Microseconds),
+            Keyword::MILLENIUM => Ok(DateTimeField::Millenium),
+            Keyword::MILLISECONDS => Ok(DateTimeField::Milliseconds),
+            Keyword::QUARTER => Ok(DateTimeField::Quarter),
+            Keyword::TIMEZONE => Ok(DateTimeField::Timezone),
+            Keyword::TIMEZONE_HOUR => Ok(DateTimeField::TimezoneHour),
+            Keyword::TIMEZONE_MINUTE => Ok(DateTimeField::TimezoneMinute),
+            _ => self.expected("date/time field", token)?,
         }
     }
 
@@ -1137,7 +1150,7 @@ impl<'a> Parser<'a> {
                 .iter()
                 .any(|d| kw.keyword == *d) =>
             {
-                Some(self.parse_date_time_field()?)
+                Some(self.parse_date_time_field(false)?)
             }
             _ => None,
         };
@@ -1155,7 +1168,7 @@ impl<'a> Parser<'a> {
             } else {
                 let leading_precision = self.parse_optional_precision()?;
                 if self.parse_keyword(Keyword::TO) {
-                    let last_field = Some(self.parse_date_time_field()?);
+                    let last_field = Some(self.parse_date_time_field(false)?);
                     let fsec_precision = if last_field == Some(DateTimeField::Second) {
                         self.parse_optional_precision()?
                     } else {

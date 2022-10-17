@@ -1759,3 +1759,28 @@ fn parse_interval_math() {
         expr_from_projection(only(&select.projection)),
     );
 }
+
+#[test]
+fn parse_pg_extract() {
+    // FIXME: It's a good idea to add a few more tests, including expr assertion,
+    // but `verified_only_select` validates serialization of the query, leading to
+    // quote-escaped variant being unquoted.
+    //
+    // It could be fixed with an addition of `quote_style` field in Expr::Extract
+    // but would introduce enough changes to dependents to consider this out-of-scope
+    // for the time being as this only benefits tests.
+    pg_and_generic().one_statement_parses_to(
+        "SELECT EXTRACT('YEAR' from d)",
+        "SELECT EXTRACT(YEAR FROM d)",
+    );
+    pg_and_generic().one_statement_parses_to(
+        "SELECT EXTRACT('month' from d)",
+        "SELECT EXTRACT(MONTH FROM d)",
+    );
+
+    let res = pg_and_generic().parse_sql_statements("SELECT EXTRACT('MILLISECOND' FROM d)");
+    assert_eq!(
+        ParserError::ParserError("Expected date/time field, found: 'MILLISECOND'".to_string()),
+        res.unwrap_err()
+    );
+}
