@@ -24,8 +24,8 @@ mod test_utils;
 use matches::assert_matches;
 use sqlparser::ast::*;
 use sqlparser::dialect::{
-    AnsiDialect, ClickHouseDialect, GenericDialect, MsSqlDialect, PostgreSqlDialect, SQLiteDialect,
-    SnowflakeDialect,
+    AnsiDialect, ClickHouseDialect, GenericDialect, HiveDialect, MsSqlDialect, PostgreSqlDialect,
+    SQLiteDialect, SnowflakeDialect,
 };
 use sqlparser::keywords::ALL_KEYWORDS;
 use sqlparser::parser::{Parser, ParserError};
@@ -1642,6 +1642,27 @@ fn parse_listagg() {
         }),
         expr_from_projection(only(&select.projection))
     );
+}
+
+#[test]
+fn parse_array_agg_func() {
+    let supported_dialects = TestedDialects {
+        dialects: vec![
+            Box::new(GenericDialect {}),
+            Box::new(PostgreSqlDialect {}),
+            Box::new(MsSqlDialect {}),
+            Box::new(AnsiDialect {}),
+            Box::new(HiveDialect {}),
+        ],
+    };
+
+    for sql in [
+        "SELECT ARRAY_AGG(x ORDER BY x) AS a FROM T",
+        "SELECT ARRAY_AGG(x ORDER BY x LIMIT 2) FROM tbl",
+        "SELECT ARRAY_AGG(DISTINCT x ORDER BY x LIMIT 2) FROM tbl",
+    ] {
+        supported_dialects.verified_stmt(sql);
+    }
 }
 
 #[test]
