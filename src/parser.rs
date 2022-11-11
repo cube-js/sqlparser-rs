@@ -464,6 +464,7 @@ impl<'a> Parser<'a> {
                     self.expect_token(&Token::LParen)?;
                     self.parse_array_subquery()
                 }
+                Keyword::ARRAY_AGG => self.parse_array_agg_expr(),
                 Keyword::NOT => Ok(Expr::UnaryOp {
                     op: UnaryOperator::Not,
                     expr: Box::new(self.parse_subexpr(Self::UNARY_NOT_PREC)?),
@@ -988,6 +989,54 @@ impl<'a> Parser<'a> {
             separator,
             on_overflow,
             within_group,
+        }))
+    }
+
+    pub fn parse_array_agg_expr(&mut self) -> Result<Expr, ParserError> {
+        self.expect_token(&Token::LParen)?;
+        let distinct = self.parse_keyword(Keyword::DISTINCT);
+        let expr = Box::new(self.parse_expr()?);
+        // ANSI SQL and BigQuery define ORDER BY inside function.
+        if !self.dialect.supports_within_after_array_aggregation() {
+            let order_by = if self.parse_keywords(&[Keyword::ORDER, Keyword::BY]) {
+                let order_by_expr = self.parse_order_by_expr()?;
+                Some(Box::new(order_by_expr))
+            } else {
+                None
+            };
+            let limit = if self.parse_keyword(Keyword::LIMIT) {
+                self.parse_limit()?.map(Box::new)
+            } else {
+                None
+            };
+            self.expect_token(&Token::RParen)?;
+            return Ok(Expr::ArrayAgg(ArrayAgg {
+                distinct,
+                expr,
+                order_by,
+                limit,
+                within_group: false,
+            }));
+        }
+        // Snowflake defines ORDERY BY in within group instead of inside the function like
+        // ANSI SQL.
+        self.expect_token(&Token::RParen)?;
+        let within_group = if self.parse_keywords(&[Keyword::WITHIN, Keyword::GROUP]) {
+            self.expect_token(&Token::LParen)?;
+            self.expect_keywords(&[Keyword::ORDER, Keyword::BY])?;
+            let order_by_expr = self.parse_order_by_expr()?;
+            self.expect_token(&Token::RParen)?;
+            Some(Box::new(order_by_expr))
+        } else {
+            None
+        };
+
+        Ok(Expr::ArrayAgg(ArrayAgg {
+            distinct,
+            expr,
+            order_by: within_group,
+            limit: None,
+            within_group: true,
         }))
     }
 
