@@ -11,11 +11,9 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           components: rustfmt
-          # Note that `nightly` is required for `license_template_path`, as
-          # it's an unstable feature.
-          rust-version: nightly
+          rust-version: nightly-2022-03-08
       - uses: actions/checkout@v2
-      - run: cargo +nightly fmt -- --check --config-path <(echo 'license_template_path = "HEADER"')
+      - run: cargo fmt -- --check --config-path <(echo 'license_template_path = "HEADER"')
 
   lint:
     runs-on: ubuntu-latest
@@ -24,6 +22,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           components: clippy
+          rust-version: nightly-2022-03-08
       - uses: actions/checkout@v2
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
@@ -42,13 +41,14 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           targets: 'thumbv6m-none-eabi'
+          rust-version: nightly-2022-03-08
       - uses: actions/checkout@master
       - run: cargo check --no-default-features --target thumbv6m-none-eabi
 
   test:
     strategy:
       matrix:
-        rust: [stable, beta, nightly]
+        rust: [stable, beta, nightly, nightly-2022-03-08]
     runs-on: ubuntu-latest
     steps:
     - name: Setup Rust
