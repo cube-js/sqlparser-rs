@@ -1502,7 +1502,8 @@ fn test_composite_value() {
                 )))],
                 over: None,
                 distinct: false,
-                special: false
+                special: false,
+                approximate: false,
             }))))
         }),
         select.projection[0]
@@ -1631,6 +1632,7 @@ fn parse_current_functions() {
             over: None,
             distinct: false,
             special: true,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -1641,6 +1643,7 @@ fn parse_current_functions() {
             over: None,
             distinct: false,
             special: true,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[1])
     );
@@ -1651,6 +1654,7 @@ fn parse_current_functions() {
             over: None,
             distinct: false,
             special: true,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[2])
     );
@@ -1661,6 +1665,7 @@ fn parse_current_functions() {
             over: None,
             distinct: false,
             special: true,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[3])
     );
@@ -1782,5 +1787,41 @@ fn parse_pg_extract() {
     assert_eq!(
         ParserError::ParserError("Expected date/time field, found: 'MILLISECOND'".to_string()),
         res.unwrap_err()
+    );
+}
+
+#[test]
+fn parse_approximate_count() {
+    let sql = "SELECT APPROXIMATE COUNT(DISTINCT column)";
+    let select = pg_and_generic().verified_only_select(sql);
+    assert_eq!(
+        &Expr::Function(Function {
+            name: ObjectName(vec!["COUNT".into()]),
+            args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(
+                Expr::Identifier(Ident::new("column"))
+            )),],
+            over: None,
+            distinct: true,
+            special: false,
+            approximate: true,
+        }),
+        expr_from_projection(only(&select.projection)),
+    );
+
+    let sql = "SELECT APPROXIMATE AS alias";
+    let select = pg_and_generic().verified_only_select(sql);
+    assert_eq!(
+        SelectItem::ExprWithAlias {
+            expr: Expr::Identifier(Ident::new("APPROXIMATE")),
+            alias: Ident::new("alias"),
+        },
+        select.projection[0]
+    );
+
+    let sql = "SELECT APPROXIMATE, COUNT(DISTINCT column)";
+    let select = pg_and_generic().verified_only_select(sql);
+    assert_eq!(
+        SelectItem::UnnamedExpr(Expr::Identifier(Ident::new("APPROXIMATE"))),
+        select.projection[0]
     );
 }

@@ -504,6 +504,7 @@ fn parse_select_count_wildcard() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -523,6 +524,7 @@ fn parse_select_count_distinct() {
             over: None,
             distinct: true,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -1473,6 +1475,7 @@ fn parse_select_having() {
                 over: None,
                 distinct: false,
                 special: false,
+                approximate: false,
             })),
             op: BinaryOperator::Gt,
             right: Box::new(Expr::Value(number("1")))
@@ -1506,6 +1509,7 @@ fn parse_select_qualify() {
                 }),
                 distinct: false,
                 special: false,
+                approximate: false,
             })),
             op: BinaryOperator::Eq,
             right: Box::new(Expr::Value(number("1")))
@@ -2534,6 +2538,7 @@ fn parse_scalar_function_in_projection() {
                 over: None,
                 distinct: false,
                 special: false,
+                approximate: false,
             }),
             expr_from_projection(only(&select.projection))
         );
@@ -2613,6 +2618,7 @@ fn parse_named_argument_function() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -2647,6 +2653,7 @@ fn parse_window_functions() {
             }),
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -2756,6 +2763,7 @@ fn parse_expr_interval() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         });
 
         assert_eq!(
@@ -2788,6 +2796,7 @@ fn parse_expr_interval() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         });
         assert_eq!(
             &Expr::Value(Value::Interval {
@@ -2933,6 +2942,7 @@ fn parse_at_timezone() {
                 over: None,
                 distinct: false,
                 special: false,
+                approximate: false,
             })),
             time_zone: "UTC-06:00".to_string()
         },
@@ -2959,6 +2969,7 @@ fn parse_at_timezone() {
                             over: None,
                             distinct: false,
                             special: false,
+                            approximate: false,
                         },)),
                         time_zone: "UTC-06:00".to_string(),
                     },),),
@@ -2969,6 +2980,7 @@ fn parse_at_timezone() {
                 over: None,
                 distinct: false,
                 special: false,
+                approximate: false,
             },),
             alias: Ident {
                 value: "hour".to_string(),
@@ -3005,6 +3017,7 @@ fn parse_table_function() {
                 over: None,
                 distinct: false,
                 special: false,
+                approximate: false,
             });
             assert_eq!(expr, expected_expr);
             assert_eq!(alias, table_alias("a"))
@@ -3062,6 +3075,7 @@ fn parse_delimited_identifiers() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[1]),
     );
@@ -5022,6 +5036,7 @@ fn parse_time_functions() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -5038,6 +5053,7 @@ fn parse_time_functions() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -5054,6 +5070,7 @@ fn parse_time_functions() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -5070,6 +5087,7 @@ fn parse_time_functions() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -5086,6 +5104,7 @@ fn parse_time_functions() {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );

@@ -77,6 +77,7 @@ define_keywords!(
     AND,
     ANY,
     APPLY,
+    APPROXIMATE,
     ARE,
     ARRAY,
     ARRAY_AGG,
