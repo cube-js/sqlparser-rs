@@ -2231,10 +2231,15 @@ pub struct Function {
     // aggregate functions may specify eg `COUNT(DISTINCT x)`
     pub distinct: bool,
     pub special: bool,
+    // Redshift provides `APPROXIMATE` option for some functions, e.g. `COUNT`
+    pub approximate: bool,
 }
 
 impl fmt::Display for Function {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.approximate {
+            write!(f, "APPROXIMATE ")?;
+        }
         if self.special {
             write!(f, "{}", self.name)?;
         } else {
