@@ -694,6 +694,7 @@ fn parse_insert_with_on_duplicate_update() {
                             over: None,
                             distinct: false,
                             special: false,
+                            approximate: false,
                         })
                     },
                     Assignment {
@@ -706,6 +707,7 @@ fn parse_insert_with_on_duplicate_update() {
                             over: None,
                             distinct: false,
                             special: false,
+                            approximate: false,
                         })
                     },
                     Assignment {
@@ -718,6 +720,7 @@ fn parse_insert_with_on_duplicate_update() {
                             over: None,
                             distinct: false,
                             special: false,
+                            approximate: false,
                         })
                     },
                     Assignment {
@@ -730,6 +733,7 @@ fn parse_insert_with_on_duplicate_update() {
                             over: None,
                             distinct: false,
                             special: false,
+                            approximate: false,
                         })
                     },
                     Assignment {
@@ -742,6 +746,7 @@ fn parse_insert_with_on_duplicate_update() {
                             over: None,
                             distinct: false,
                             special: false,
+                            approximate: false,
                         })
                     },
                 ])),

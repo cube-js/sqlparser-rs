@@ -330,6 +330,17 @@ impl<'a> Parser<'a> {
                     }
                 }
             }
+            Token::Word(w)
+                if dialect_of!(self is RedshiftSqlDialect | PostgreSqlDialect | GenericDialect)
+                    && w.keyword == Keyword::APPROXIMATE
+                    && self.peek_token() != Token::Comma =>
+            {
+                let mut expr = self.parse_expr()?;
+                if let Expr::Function(fun) = &mut expr {
+                    fun.approximate = true;
+                    return Ok(WildcardExpr::Expr(expr));
+                }
+            }
             Token::Mul => {
                 return Ok(WildcardExpr::Wildcard);
             }
@@ -433,6 +444,7 @@ impl<'a> Parser<'a> {
                         over: None,
                         distinct: false,
                         special: true,
+                        approximate: false,
                     }))
                 }
                 Keyword::CURRENT_TIMESTAMP
@@ -620,6 +632,7 @@ impl<'a> Parser<'a> {
             over,
             distinct,
             special: false,
+            approximate: false,
         }))
     }
 
@@ -635,6 +648,7 @@ impl<'a> Parser<'a> {
             over: None,
             distinct: false,
             special: false,
+            approximate: false,
         }))
     }
 
