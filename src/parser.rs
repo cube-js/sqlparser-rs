@@ -1247,14 +1247,20 @@ impl<'a> Parser<'a> {
         };
 
         if let Some(op) = regular_binary_operator {
-            if let Some(keyword) = self.parse_one_of_keywords(&[Keyword::ANY, Keyword::ALL]) {
+            if let Some(keyword) =
+                self.parse_one_of_keywords(&[Keyword::ANY, Keyword::SOME, Keyword::ALL])
+            {
                 self.expect_token(&Token::LParen)?;
-                let right = self.parse_subexpr(precedence)?;
+                let right = if let Ok(query) = self.parse_query() {
+                    Expr::AnyAllSubquery(Box::new(query))
+                } else {
+                    self.parse_subexpr(precedence)?
+                };
                 self.expect_token(&Token::RParen)?;
 
                 let right = match keyword {
                     Keyword::ALL => Box::new(Expr::AllOp(Box::new(right))),
-                    Keyword::ANY => Box::new(Expr::AnyOp(Box::new(right))),
+                    Keyword::ANY | Keyword::SOME => Box::new(Expr::AnyOp(Box::new(right))),
                     _ => unreachable!(),
                 };
 
