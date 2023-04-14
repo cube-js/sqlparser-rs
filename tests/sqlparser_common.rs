@@ -2720,8 +2720,7 @@ fn parse_scalar_subqueries() {
         verified_expr(sql),
         Expr::BinaryOp {
             op: BinaryOperator::Plus,
-            .. //left: box Subquery { .. },
-               //right: box Subquery { .. },
+            ..
         }
     );
 }
