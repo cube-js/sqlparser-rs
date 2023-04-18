@@ -24,8 +24,12 @@ use test_utils::{all_dialects, expr_from_projection, join, number, only, table, 
 
 use matches::assert_matches;
 use sqlparser::ast::*;
-use sqlparser::dialect::{keywords::ALL_KEYWORDS, SQLiteDialect};
+use sqlparser::dialect::{
+    keywords::ALL_KEYWORDS, AnsiDialect, GenericDialect, MsSqlDialect, PostgreSqlDialect,
+    SQLiteDialect, SnowflakeDialect,
+};
 use sqlparser::parser::{Parser, ParserError};
+use sqlparser::test_utils::TestedDialects;
 
 #[test]
 fn parse_insert_values() {
@@ -109,7 +113,7 @@ fn parse_insert_sqlite() {
     .unwrap()
     {
         Statement::Insert { or, .. } => assert_eq!(or, expected_action),
-        _ => panic!(sql.to_string()),
+        _ => panic!("{}", sql.to_string()),
     };
 
     let sql = "INSERT INTO test_table(id) VALUES(1)";
@@ -2715,10 +2719,9 @@ fn parse_scalar_subqueries() {
     assert_matches!(
         verified_expr(sql),
         Expr::BinaryOp {
-        op: BinaryOperator::Plus, ..
-        //left: box Subquery { .. },
-        //right: box Subquery { .. },
-    }
+            op: BinaryOperator::Plus,
+            ..
+        }
     );
 }
 
@@ -3554,6 +3557,42 @@ fn parse_rolling_window() {
             second_bound: Some(WindowFrameBound::CurrentRow),
             offset: Some(RollingOffset::End),
         }
+    );
+}
+
+#[test]
+fn test_placeholder() {
+    let sql = "SELECT * FROM student WHERE id = ?";
+    let ast = verified_only_select(sql);
+    assert_eq!(
+        ast.selection,
+        Some(Expr::BinaryOp {
+            left: Box::new(Expr::Identifier(Ident::new("id"))),
+            op: BinaryOperator::Eq,
+            right: Box::new(Expr::Value(Value::Placeholder("?".into())))
+        })
+    );
+
+    let dialects = TestedDialects {
+        dialects: vec![
+            Box::new(GenericDialect {}),
+            Box::new(PostgreSqlDialect {}),
+            Box::new(MsSqlDialect {}),
+            Box::new(AnsiDialect {}),
+            Box::new(SnowflakeDialect {}),
+            // Note: `$` is the starting word for the HiveDialect identifier
+            // Box::new(sqlparser::dialect::HiveDialect {}),
+        ],
+    };
+    let sql = "SELECT * FROM student WHERE id = $Id1";
+    let ast = dialects.verified_only_select(sql);
+    assert_eq!(
+        ast.selection,
+        Some(Expr::BinaryOp {
+            left: Box::new(Expr::Identifier(Ident::new("id"))),
+            op: BinaryOperator::Eq,
+            right: Box::new(Expr::Value(Value::Placeholder("$Id1".into())))
+        })
     );
 }
 
