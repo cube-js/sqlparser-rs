@@ -504,7 +504,7 @@ impl<'a> Parser<'a> {
                 };
                 Ok(Expr::UnaryOp {
                     op,
-                    expr: Box::new(self.parse_subexpr(Self::PLUS_MINUS_PREC)?),
+                    expr: Box::new(self.parse_subexpr(Self::MUL_DIV_MOD_OP_PREC)?),
                 })
             }
             tok @ Token::DoubleExclamationMark
@@ -1476,6 +1476,7 @@ impl<'a> Parser<'a> {
     }
 
     // use https://www.postgresql.org/docs/7.0/operators.htm#AEN2026 as a reference
+    const MUL_DIV_MOD_OP_PREC: u8 = 40;
     const PLUS_MINUS_PREC: u8 = 30;
     const XOR_PREC: u8 = 24;
     const TIME_ZONE_PREC: u8 = 20;
@@ -1545,7 +1546,9 @@ impl<'a> Parser<'a> {
             Token::Caret | Token::Sharp | Token::ShiftRight | Token::ShiftLeft => Ok(22),
             Token::Ampersand => Ok(23),
             Token::Plus | Token::Minus => Ok(Self::PLUS_MINUS_PREC),
-            Token::Mul | Token::Div | Token::Mod | Token::StringConcat => Ok(40),
+            Token::Mul | Token::Div | Token::Mod | Token::StringConcat => {
+                Ok(Self::MUL_DIV_MOD_OP_PREC)
+            }
             Token::DoubleColon => Ok(50),
             Token::ExclamationMark => Ok(50),
             Token::LBracket
