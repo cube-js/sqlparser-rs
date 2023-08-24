@@ -1858,12 +1858,13 @@ impl fmt::Display for Statement {
                     .iter()
                     .map(|key_value| {
                         format!(
-                            "{}{}",
+                            "{}{} = {}",
                             if key_value.local { "LOCAL " } else { "" },
+                            key_value.key,
                             key_value
                                 .value
                                 .iter()
-                                .map(|value| format!("{} = {}", key_value.key, value))
+                                .map(|value| format!("{}", value))
                                 .collect::<Vec<String>>()
                                 .join(", ")
                         )
