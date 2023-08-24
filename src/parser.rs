@@ -3684,11 +3684,16 @@ impl<'a> Parser<'a> {
         }
 
         let mut key_values: Vec<SetVariableKeyValue> = vec![];
-        loop {
+
+        if dialect_of!(self is PostgreSqlDialect | RedshiftSqlDialect) {
             let variable = self.parse_identifier()?;
             let mut values = vec![];
 
-            if self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO) {
+            if !self.consume_token(&Token::Eq) && !self.parse_keyword(Keyword::TO) {
+                return self.expected("equals sign or TO", self.peek_token());
+            }
+
+            loop {
                 let value = if let Ok(expr) = self.parse_expr() {
                     expr
                 } else {
@@ -3697,22 +3702,50 @@ impl<'a> Parser<'a> {
 
                 values.push(value);
 
-                key_values.push(SetVariableKeyValue {
-                    key: variable,
-                    value: values,
-                    local: modifier == Some(Keyword::LOCAL),
-                    hivevar: false,
-                });
-
-                if self.consume_token(&Token::Comma) {
-                    continue;
+                if !self.consume_token(&Token::Comma) {
+                    break;
                 }
+            }
 
-                return Ok(Statement::SetVariable { key_values });
-            } else {
+            key_values.push(SetVariableKeyValue {
+                key: variable,
+                value: values,
+                local: modifier == Some(Keyword::LOCAL),
+                hivevar: false,
+            });
+
+            return Ok(Statement::SetVariable { key_values });
+        }
+
+        loop {
+            let variable = self.parse_identifier()?;
+            let mut values = vec![];
+
+            if !self.consume_token(&Token::Eq) && !self.parse_keyword(Keyword::TO) {
                 return self.expected("equals sign or TO", self.peek_token());
             }
+
+            let value = if let Ok(expr) = self.parse_expr() {
+                expr
+            } else {
+                self.expected("variable value", self.peek_token())?
+            };
+
+            values.push(value);
+
+            key_values.push(SetVariableKeyValue {
+                key: variable,
+                value: values,
+                local: modifier == Some(Keyword::LOCAL),
+                hivevar: false,
+            });
+
+            if !self.consume_token(&Token::Comma) {
+                break;
+            }
         }
+
+        Ok(Statement::SetVariable { key_values })
     }
 
     pub fn parse_show(&mut self) -> Result<Statement, ParserError> {

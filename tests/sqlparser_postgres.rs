@@ -790,6 +790,29 @@ fn parse_set() {
         }
     );
 
+    let stmt = pg().verified_stmt("SET a = b, c");
+    assert_eq!(
+        stmt,
+        Statement::SetVariable {
+            key_values: [SetVariableKeyValue {
+                key: "a".into(),
+                value: vec![
+                    Expr::Identifier(Ident {
+                        value: "b".into(),
+                        quote_style: None
+                    }),
+                    Expr::Identifier(Ident {
+                        value: "c".into(),
+                        quote_style: None
+                    }),
+                ],
+                local: false,
+                hivevar: false,
+            }]
+            .to_vec()
+        }
+    );
+
     let stmt = pg_and_generic().verified_stmt("SET a = 'b'");
     assert_eq!(
         stmt,
