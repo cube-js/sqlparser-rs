@@ -140,7 +140,7 @@ impl fmt::Display for Ident {
                 }
                 f.write_char(q)
             }
-            Some(q) if q == '[' => write!(f, "[{}]", self.value),
+            Some('[') => write!(f, "[{}]", self.value),
             None => f.write_str(&self.value),
             _ => panic!("unexpected quote style"),
         }
