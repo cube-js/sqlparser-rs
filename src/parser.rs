@@ -3682,6 +3682,7 @@ impl<'a> Parser<'a> {
                 });
             }
         } else if self.parse_keyword(Keyword::ROLE) {
+            let _ = self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO);
             let role_name = if self.parse_keyword(Keyword::NONE) {
                 None
             } else {
