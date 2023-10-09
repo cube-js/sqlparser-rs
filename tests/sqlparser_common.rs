@@ -9316,22 +9316,16 @@ fn parse_set_variable() {
 
 #[test]
 fn parse_set_role_as_variable() {
-    match verified_stmt("SET role = 'foobar'") {
-        Statement::Set(Set::SingleAssignment {
-            scope,
-            hivevar,
-            variable,
-            values,
+    // In this fork, `SET ROLE` (including the `=`/`TO` forms) is always parsed as a
+    // dedicated SET ROLE statement rather than a generic variable assignment, so
+    // `SET role = 'foobar'` becomes a `Set::SetRole` and round-trips to `SET ROLE 'foobar'`.
+    match one_statement_parses_to("SET role = 'foobar'", "SET ROLE 'foobar'") {
+        Statement::Set(Set::SetRole {
+            context_modifier,
+            role_name,
         }) => {
-            assert_eq!(scope, None);
-            assert!(!hivevar);
-            assert_eq!(variable, ObjectName::from(vec!["role".into()]));
-            assert_eq!(
-                values,
-                vec![Expr::Value(
-                    (Value::SingleQuotedString("foobar".into())).with_empty_span()
-                )]
-            );
+            assert_eq!(context_modifier, None);
+            assert_eq!(role_name, Some(Ident::with_quote('\'', "foobar")));
         }
         _ => unreachable!(),
     }

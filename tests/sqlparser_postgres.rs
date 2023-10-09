@@ -1878,6 +1878,10 @@ fn parse_set_role() {
 
     let query = "SET LOCAL ROLE \"rolename\"";
     let stmt = pg_and_generic().verified_stmt(query);
+    pg_and_generic().one_statement_parses_to(
+        "SET LOCAL ROLE = \"rolename\"",
+        "SET LOCAL ROLE \"rolename\"",
+    );
     assert_eq!(
         stmt,
         Statement::Set(Set::SetRole {
@@ -1893,6 +1897,7 @@ fn parse_set_role() {
 
     let query = "SET ROLE 'rolename'";
     let stmt = pg_and_generic().verified_stmt(query);
+    pg_and_generic().one_statement_parses_to("SET ROLE TO 'rolename'", "SET ROLE 'rolename'");
     assert_eq!(
         stmt,
         Statement::Set(Set::SetRole {

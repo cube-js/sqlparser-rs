@@ -15140,6 +15140,7 @@ impl<'a> Parser<'a> {
         modifier: Option<ContextModifier>,
     ) -> Result<Statement, ParserError> {
         self.expect_keyword_is(Keyword::ROLE)?;
+        let _ = self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO);
 
         let role_name = if self.parse_keyword(Keyword::NONE) {
             None
