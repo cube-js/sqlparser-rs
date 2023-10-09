@@ -3629,6 +3629,7 @@ impl<'a> Parser<'a> {
         ]);
 
         if modifier != Some(Keyword::HIVEVAR) && self.parse_keyword(Keyword::ROLE) {
+            let _ = self.consume_token(&Token::Eq) || self.parse_keyword(Keyword::TO);
             let role_name = if self.parse_keyword(Keyword::NONE) {
                 None
             } else {
