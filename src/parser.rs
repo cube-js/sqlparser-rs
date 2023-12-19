@@ -3827,13 +3827,7 @@ impl<'a> Parser<'a> {
             None
         };
         let object_name = match db_name {
-            Some(db_name) => ObjectName(
-                db_name
-                    .0
-                    .into_iter()
-                    .chain(table_name.0.into_iter())
-                    .collect(),
-            ),
+            Some(db_name) => ObjectName(db_name.0.into_iter().chain(table_name.0).collect()),
             None => table_name,
         };
         let filter = self.parse_show_statement_filter()?;

@@ -1786,7 +1786,7 @@ impl fmt::Display for Statement {
             Statement::SetVariable { key_values } => {
                 f.write_str("SET ")?;
 
-                if let Some(key_value) = key_values.get(0) {
+                if let Some(key_value) = key_values.first() {
                     if key_value.hivevar {
                         let values: Vec<String> = key_value
                             .value
