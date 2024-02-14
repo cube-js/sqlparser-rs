@@ -55,6 +55,8 @@ pub enum Token {
     EscapedStringLiteral(String),
     /// Hexadecimal string literal: i.e.: X'deadbeef'
     HexStringLiteral(String),
+    /// Unicode escaped string: U&'d\0061t\+000061' (data)
+    UnicodeEscapedStringLiteral(String),
     /// Comma
     Comma,
     /// Whitespace (space, tab, etc)
@@ -156,6 +158,7 @@ impl fmt::Display for Token {
             Token::NationalStringLiteral(ref s) => write!(f, "N'{}'", s),
             Token::EscapedStringLiteral(ref s) => write!(f, "E'{}'", s),
             Token::HexStringLiteral(ref s) => write!(f, "X'{}'", s),
+            Token::UnicodeEscapedStringLiteral(ref s) => write!(f, "U&'{}'", s),
             Token::Comma => f.write_str(","),
             Token::Whitespace(ws) => write!(f, "{}", ws),
             Token::DoubleEq => f.write_str("=="),
@@ -413,6 +416,28 @@ impl<'a> Tokenizer<'a> {
                             let s = self.tokenize_word(x, chars);
                             Ok(Some(Token::make_word(&s, None)))
                         }
+                    }
+                }
+                x @ 'u' | x @ 'U' => {
+                    chars.next(); // consume, to check the next char
+                    let mut look_ahead_chars = chars.clone();
+                    if look_ahead_chars.next_if_eq(&'&').is_some() {
+                        match look_ahead_chars.peek() {
+                            Some('\'') => {
+                                //Move chars to the position of look_ahead_chars
+                                chars.next();
+                                // U&'...' - a <binary string literal>
+                                let s = self.tokenize_single_quoted_string(chars)?;
+                                Ok(Some(Token::UnicodeEscapedStringLiteral(s)))
+                            }
+                            _ => {
+                                let s = self.tokenize_word(x, chars);
+                                Ok(Some(Token::make_word(&s, None)))
+                            }
+                        }
+                    } else {
+                        let s = self.tokenize_word(x, chars);
+                        Ok(Some(Token::make_word(&s, None)))
                     }
                 }
                 // identifier or keyword
@@ -1416,5 +1441,37 @@ mod tests {
         //println!("expected = {:?}", expected);
         //println!("------------------------------");
         assert_eq!(expected, actual);
+    }
+    #[test]
+    fn tokenize_unicode_escaped_literal() {
+        let sql = r#"U&'aaa'"#;
+        let dialect = GenericDialect {};
+        let mut tokenizer = Tokenizer::new(&dialect, sql);
+        let tokens = tokenizer.tokenize().unwrap();
+        let expected = vec![Token::UnicodeEscapedStringLiteral("aaa".to_string())];
+        compare(expected, tokens);
+
+        let sql = r#"U&a"#;
+        let dialect = GenericDialect {};
+        let mut tokenizer = Tokenizer::new(&dialect, sql);
+        let tokens = tokenizer.tokenize().unwrap();
+        let expected = vec![
+            Token::make_word("U", None),
+            Token::Ampersand,
+            Token::make_word("a", None),
+        ];
+        compare(expected, tokens);
+        let sql = r#"U & 'aaa'"#;
+        let dialect = GenericDialect {};
+        let mut tokenizer = Tokenizer::new(&dialect, sql);
+        let tokens = tokenizer.tokenize().unwrap();
+        let expected = vec![
+            Token::make_word("U", None),
+            Token::Whitespace(Whitespace::Space),
+            Token::Ampersand,
+            Token::Whitespace(Whitespace::Space),
+            Token::SingleQuotedString("aaa".to_string()),
+        ];
+        compare(expected, tokens);
     }
 }
