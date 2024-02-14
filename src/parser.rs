@@ -527,7 +527,7 @@ impl<'a> Parser<'a> {
                     expr: Box::new(self.parse_subexpr(Self::PLUS_MINUS_PREC)?),
                 })
             }
-            Token::EscapedStringLiteral(_) if dialect_of!(self is PostgreSqlDialect | GenericDialect) =>
+            Token::EscapedStringLiteral(_) | Token::UnicodeEscapedStringLiteral(_) if dialect_of!(self is PostgreSqlDialect | GenericDialect) =>
             {
                 self.prev_token();
                 Ok(Expr::Value(self.parse_value()?))
@@ -956,6 +956,7 @@ impl<'a> Parser<'a> {
                     Token::SingleQuotedString(_)
                     | Token::EscapedStringLiteral(_)
                     | Token::NationalStringLiteral(_)
+                    | Token::UnicodeEscapedStringLiteral(_)
                     | Token::HexStringLiteral(_) => Some(Box::new(self.parse_expr()?)),
                     unexpected => {
                         self.expected("either filler, WITH, or WITHOUT in LISTAGG", unexpected)?
@@ -2888,6 +2889,9 @@ impl<'a> Parser<'a> {
             Token::SingleQuotedString(ref s) => Ok(Value::SingleQuotedString(s.to_string())),
             Token::NationalStringLiteral(ref s) => Ok(Value::NationalStringLiteral(s.to_string())),
             Token::EscapedStringLiteral(ref s) => Ok(Value::EscapedStringLiteral(s.to_string())),
+            Token::UnicodeEscapedStringLiteral(ref s) => {
+                Ok(Value::UnicodeEscapedStringLiteral(s.to_string()))
+            }
             Token::HexStringLiteral(ref s) => Ok(Value::HexStringLiteral(s.to_string())),
             Token::Placeholder(ref s) => Ok(Value::Placeholder(s.to_string())),
             unexpected => self.expected("a value", unexpected),

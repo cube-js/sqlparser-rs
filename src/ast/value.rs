@@ -39,6 +39,8 @@ pub enum Value {
     NationalStringLiteral(String),
     /// X'hex value'
     HexStringLiteral(String),
+    /// U&'hex value'
+    UnicodeEscapedStringLiteral(String),
 
     DoubleQuotedString(String),
     /// Boolean value true or false
@@ -75,6 +77,7 @@ impl fmt::Display for Value {
             Value::DoubleQuotedString(v) => write!(f, "\"{}\"", v),
             Value::SingleQuotedString(v) => write!(f, "'{}'", escape_single_quote_string(v)),
             Value::EscapedStringLiteral(v) => write!(f, "E'{}'", escape_escaped_string(v)),
+            Value::UnicodeEscapedStringLiteral(v) => write!(f, "U&'{}'", escape_escaped_string(v)),
             Value::NationalStringLiteral(v) => write!(f, "N'{}'", v),
             Value::HexStringLiteral(v) => write!(f, "X'{}'", v),
             Value::Boolean(v) => write!(f, "{}", v),
