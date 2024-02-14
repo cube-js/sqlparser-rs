@@ -392,7 +392,6 @@ impl<'a> Tokenizer<'a> {
                     match chars.peek() {
                         Some('\'') => {
                             let s = self.tokenize_escaped_single_quoted_string(chars)?;
-                            println!("!!! aaa {}", s);
                             Ok(Some(Token::EscapedStringLiteral(s)))
                         }
                         _ => {
