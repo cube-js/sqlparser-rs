@@ -4852,6 +4852,20 @@ fn test_placeholder() {
         ast.limit,
         Some(Expr::Value(Value::Placeholder("$1".into())))
     );
+
+    let sql = "SELECT * FROM student OFFSET $1";
+    let ast = dialects.verified_query(sql);
+    assert_eq!(
+        ast.offset.map(|offset| offset.value),
+        Some(Expr::Value(Value::Placeholder("$1".into())))
+    );
+
+    let sql = "SELECT * FROM student FETCH FIRST $1 ROWS ONLY";
+    let ast = dialects.verified_query(sql);
+    assert_eq!(
+        ast.fetch.map(|fetch| fetch.quantity),
+        Some(Some(Expr::Value(Value::Placeholder("$1".into()))))
+    );
 }
 
 #[test]
