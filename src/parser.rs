@@ -2774,6 +2774,7 @@ impl<'a> Parser<'a> {
     pub fn parse_number_value(&mut self) -> Result<Value, ParserError> {
         match self.parse_value()? {
             v @ Value::Number(_, _) => Ok(v),
+            v @ Value::Placeholder(_) => Ok(v),
             _ => {
                 self.prev_token();
                 self.expected("literal number", self.peek_token())
@@ -4228,7 +4229,7 @@ impl<'a> Parser<'a> {
         if self.parse_keyword(Keyword::ALL) {
             Ok(None)
         } else {
-            Ok(Some(self.parse_expr()?))
+            Ok(Some(Expr::Value(self.parse_number_value()?)))
         }
     }
 
