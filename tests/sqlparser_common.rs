@@ -1146,6 +1146,11 @@ fn parse_binary_any() {
 }
 
 #[test]
+fn parse_select_some() {
+    one_statement_parses_to("SELECT a = SOME(b)", "SELECT a = ANY(b)");
+}
+
+#[test]
 fn parse_binary_all() {
     let select = verified_only_select("SELECT a = ALL(b)");
     assert_eq!(
@@ -1153,6 +1158,52 @@ fn parse_binary_all() {
             left: Box::new(Expr::Identifier(Ident::new("a"))),
             op: BinaryOperator::Eq,
             right: Box::new(Expr::AllOp(Box::new(Expr::Identifier(Ident::new("b"))))),
+        }),
+        select.projection[0]
+    );
+}
+
+#[test]
+fn parse_binary_any_subquery() {
+    let select = verified_only_select("SELECT a <> ANY(SELECT b FROM c)");
+    assert_eq!(
+        SelectItem::UnnamedExpr(Expr::BinaryOp {
+            left: Box::new(Expr::Identifier(Ident::new("a"))),
+            op: BinaryOperator::NotEq,
+            right: Box::new(Expr::AnyOp(Box::new(Expr::AnyAllSubquery(Box::new(
+                Query {
+                    with: None,
+                    body: SetExpr::Select(Box::new(Select {
+                        distinct: false,
+                        top: None,
+                        projection: vec![SelectItem::UnnamedExpr(Expr::Identifier(Ident::new(
+                            "b"
+                        )))],
+                        into: None,
+                        from: vec![TableWithJoins {
+                            relation: TableFactor::Table {
+                                name: ObjectName(vec![Ident::new("c")]),
+                                alias: None,
+                                args: vec![],
+                                with_hints: vec![],
+                            },
+                            joins: vec![]
+                        }],
+                        lateral_views: vec![],
+                        selection: None,
+                        group_by: vec![],
+                        cluster_by: vec![],
+                        distribute_by: vec![],
+                        sort_by: vec![],
+                        having: None
+                    })),
+                    order_by: vec![],
+                    limit: None,
+                    offset: None,
+                    fetch: None,
+                    lock: None,
+                }
+            ))))),
         }),
         select.projection[0]
     );
