@@ -385,6 +385,9 @@ pub enum Expr {
     /// A parenthesized subquery `(SELECT ...)`, used in expression like
     /// `SELECT (subquery) AS x` or `WHERE (subquery) = x`
     Subquery(Box<Query>),
+    /// An ANY/ALL subquery `op ANY(SELECT ...)`, used in expression like
+    /// `SELECT x = ANY(subquery) AS c`
+    AnyAllSubquery(Box<Query>),
     /// The `LISTAGG` function `SELECT LISTAGG(...) WITHIN GROUP (ORDER BY ...)`
     ListAgg(ListAgg),
     /// The `ARRAY_AGG` function `SELECT ARRAY_AGG(... ORDER BY ...)`
@@ -581,6 +584,7 @@ impl fmt::Display for Expr {
             }
             Expr::Exists(s) => write!(f, "EXISTS ({})", s),
             Expr::Subquery(s) => write!(f, "({})", s),
+            Expr::AnyAllSubquery(s) => write!(f, "{}", s),
             Expr::ArraySubquery(s) => write!(f, "ARRAY({})", s),
             Expr::ListAgg(listagg) => write!(f, "{}", listagg),
             Expr::ArrayAgg(arrayagg) => write!(f, "{}", arrayagg),
