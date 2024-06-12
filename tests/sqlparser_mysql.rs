@@ -498,7 +498,7 @@ fn parse_escaped_string() {
     let sql = r#"SELECT 'I''m fine'"#;
 
     let projection = mysql().verified_only_select(sql).projection;
-    let item = projection.get(0).unwrap();
+    let item = projection.first().unwrap();
 
     match &item {
         SelectItem::UnnamedExpr(Expr::Value(value)) => {

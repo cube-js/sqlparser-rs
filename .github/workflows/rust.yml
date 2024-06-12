@@ -11,7 +11,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           components: rustfmt
-          rust-version: nightly-2022-03-22
+          rust-version: nightly-2023-12-13
       - uses: actions/checkout@v2
       - run: cargo fmt -- --check --config-path <(echo 'license_template_path = "HEADER"')
 
@@ -22,7 +22,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           components: clippy
-          rust-version: nightly-2022-03-22
+          rust-version: nightly-2023-12-13
       - uses: actions/checkout@v2
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
@@ -41,14 +41,14 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           targets: 'thumbv6m-none-eabi'
-          rust-version: nightly-2022-03-22
+          rust-version: nightly-2023-12-13
       - uses: actions/checkout@master
       - run: cargo check --no-default-features --target thumbv6m-none-eabi
 
   test:
     strategy:
       matrix:
-        rust: [stable, beta, nightly, nightly-2022-03-22]
+        rust: [stable, beta, nightly, nightly-2023-12-13]
     runs-on: ubuntu-latest
     steps:
     - name: Setup Rust

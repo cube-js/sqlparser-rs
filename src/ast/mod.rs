@@ -140,7 +140,7 @@ impl fmt::Display for Ident {
                 }
                 f.write_char(q)
             }
-            Some(q) if q == '[' => write!(f, "[{}]", self.value),
+            Some('[') => write!(f, "[{}]", self.value),
             None => f.write_str(&self.value),
             _ => panic!("unexpected quote style"),
         }
@@ -1790,7 +1790,7 @@ impl fmt::Display for Statement {
             Statement::SetVariable { key_values } => {
                 f.write_str("SET ")?;
 
-                if let Some(key_value) = key_values.get(0) {
+                if let Some(key_value) = key_values.first() {
                     if key_value.hivevar {
                         let values: Vec<String> = key_value
                             .value
