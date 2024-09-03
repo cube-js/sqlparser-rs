@@ -198,7 +198,7 @@ fn parse_use() {
 fn parse_show_create() {
     let obj_name = ObjectName(vec![Ident::new("myident")]);
 
-    for obj_type in &vec![
+    for obj_type in &[
         ShowCreateObject::Table,
         ShowCreateObject::Trigger,
         ShowCreateObject::Event,
@@ -257,12 +257,12 @@ fn parse_set_variables() {
     assert_eq!(
         stmt,
         Statement::SetVariable {
-            key_values: vec![SetVariableKeyValue {
+            key_values: [SetVariableKeyValue {
                 local: true,
                 hivevar: false,
                 key: ObjectName(vec![Ident::new("autocommit")]),
                 value: vec![value],
-            },]
+            }]
             .to_vec()
         }
     );
@@ -503,7 +503,7 @@ fn parse_escaped_string() {
     let sql = r#"SELECT 'I''m fine'"#;
 
     let projection = mysql().verified_only_select(sql).projection;
-    let item = projection.get(0).unwrap();
+    let item = projection.first().unwrap();
 
     match &item {
         SelectItem::UnnamedExpr(Expr::Value(value)) => {

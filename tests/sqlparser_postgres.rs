@@ -1224,7 +1224,6 @@ fn parse_pg_regex_match_ops() {
 fn parse_array_index_expr() {
     #[cfg(feature = "bigdecimal")]
     let num: Vec<Expr> = (0..=10)
-        .into_iter()
         .map(|s| Expr::Value(Value::Number(bigdecimal::BigDecimal::from(s), false)))
         .collect();
     #[cfg(not(feature = "bigdecimal"))]

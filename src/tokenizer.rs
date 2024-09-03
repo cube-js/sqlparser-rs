@@ -229,7 +229,7 @@ impl Token {
         Token::Word(Word {
             value: word.to_string(),
             quote_style,
-            keyword: if quote_style == None {
+            keyword: if quote_style.is_none() {
                 let keyword = ALL_KEYWORDS.binary_search(&word_uppercase.as_str());
                 keyword.map_or(Keyword::NoKeyword, |x| ALL_KEYWORDS_INDEX[x])
             } else {
@@ -354,8 +354,8 @@ impl<'a> Tokenizer<'a> {
                 }
 
                 Token::Whitespace(Whitespace::Tab) => self.col += 4,
-                Token::Word(w) if w.quote_style == None => self.col += w.value.len() as u64,
-                Token::Word(w) if w.quote_style != None => self.col += w.value.len() as u64 + 2,
+                Token::Word(w) if w.quote_style.is_none() => self.col += w.value.len() as u64,
+                Token::Word(w) if w.quote_style.is_some() => self.col += w.value.len() as u64 + 2,
                 Token::Number(s, _) => self.col += s.len() as u64,
                 Token::SingleQuotedString(s) => self.col += s.len() as u64,
                 Token::Placeholder(s) => self.col += s.len() as u64,
@@ -457,7 +457,7 @@ impl<'a> Tokenizer<'a> {
                     chars.next(); // consume the first char
                     let s = self.tokenize_word(ch, chars);
 
-                    if s.chars().all(|x| ('0'..='9').contains(&x) || x == '.') {
+                    if s.chars().all(|x| x.is_ascii_digit() || x == '.') {
                         let mut s = peeking_take_while(&mut s.chars().peekable(), |ch| {
                             matches!(ch, '0'..='9' | '.')
                         });
@@ -495,15 +495,12 @@ impl<'a> Tokenizer<'a> {
                 }
                 // numbers and period
                 '0'..='9' | '.' => {
-                    let mut s = peeking_take_while(chars, |ch| matches!(ch, '0'..='9'));
+                    let mut s = peeking_take_while(chars, |ch| ch.is_ascii_digit());
 
                     // match binary literal that starts with 0x
                     if s == "0" && chars.peek() == Some(&'x') {
                         chars.next();
-                        let s2 = peeking_take_while(
-                            chars,
-                            |ch| matches!(ch, '0'..='9' | 'A'..='F' | 'a'..='f'),
-                        );
+                        let s2 = peeking_take_while(chars, |ch| ch.is_ascii_hexdigit());
                         return Ok(Some(Token::HexStringLiteral(s2)));
                     }
 
@@ -512,7 +509,7 @@ impl<'a> Tokenizer<'a> {
                         s.push('.');
                         chars.next();
                     }
-                    s += &peeking_take_while(chars, |ch| matches!(ch, '0'..='9'));
+                    s += &peeking_take_while(chars, |ch| ch.is_ascii_digit());
 
                     // No number -> Token::Period
                     if s == "." {
