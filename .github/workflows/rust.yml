@@ -49,7 +49,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable, beta, nightly, nightly-2022-03-22]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Setup Rust
       uses: hecrj/setup-rust-action@v1
