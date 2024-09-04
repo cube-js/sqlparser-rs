@@ -627,14 +627,33 @@ impl<'a> Parser<'a> {
             None
         };
 
-        Ok(Expr::Function(Function {
+        let within_group = if self.parse_keywords(&[Keyword::WITHIN, Keyword::GROUP]) {
+            self.expect_token(&Token::LParen)?;
+            self.expect_keywords(&[Keyword::ORDER, Keyword::BY])?;
+            let order_by_expr = self.parse_comma_separated(Parser::parse_order_by_expr)?;
+            self.expect_token(&Token::RParen)?;
+            Some(order_by_expr)
+        } else {
+            None
+        };
+
+        let function = Expr::Function(Function {
             name,
             args,
             over,
             distinct,
             special: false,
             approximate: false,
-        }))
+        });
+
+        Ok(if let Some(within_group) = within_group {
+            Expr::WithinGroup(WithinGroup {
+                expr: Box::new(function),
+                order_by: within_group,
+            })
+        } else {
+            function
+        })
     }
 
     pub fn parse_time_functions(&mut self, name: ObjectName) -> Result<Expr, ParserError> {
@@ -995,17 +1014,24 @@ impl<'a> Parser<'a> {
             self.expect_keywords(&[Keyword::ORDER, Keyword::BY])?;
             let order_by_expr = self.parse_comma_separated(Parser::parse_order_by_expr)?;
             self.expect_token(&Token::RParen)?;
-            order_by_expr
+            Some(order_by_expr)
         } else {
-            vec![]
+            None
         };
-        Ok(Expr::ListAgg(ListAgg {
+        let list_agg = Expr::ListAgg(ListAgg {
             distinct,
             expr,
             separator,
             on_overflow,
-            within_group,
-        }))
+        });
+        Ok(if let Some(within_group) = within_group {
+            Expr::WithinGroup(WithinGroup {
+                expr: Box::new(list_agg),
+                order_by: within_group,
+            })
+        } else {
+            list_agg
+        })
     }
 
     pub fn parse_array_agg_expr(&mut self) -> Result<Expr, ParserError> {
@@ -1031,7 +1057,6 @@ impl<'a> Parser<'a> {
                 expr,
                 order_by,
                 limit,
-                within_group: false,
             }));
         }
         // Snowflake defines ORDERY BY in within group instead of inside the function like
@@ -1042,18 +1067,25 @@ impl<'a> Parser<'a> {
             self.expect_keywords(&[Keyword::ORDER, Keyword::BY])?;
             let order_by_expr = self.parse_order_by_expr()?;
             self.expect_token(&Token::RParen)?;
-            Some(Box::new(order_by_expr))
+            Some(order_by_expr)
         } else {
             None
         };
 
-        Ok(Expr::ArrayAgg(ArrayAgg {
+        let array_agg = Expr::ArrayAgg(ArrayAgg {
             distinct,
             expr,
-            order_by: within_group,
+            order_by: None,
             limit: None,
-            within_group: true,
-        }))
+        });
+        Ok(if let Some(within_group) = within_group {
+            Expr::WithinGroup(WithinGroup {
+                expr: Box::new(array_agg),
+                order_by: vec![within_group],
+            })
+        } else {
+            array_agg
+        })
     }
 
     // This function parses date/time fields for both the EXTRACT function-like

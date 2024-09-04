@@ -348,6 +348,8 @@ pub enum Expr {
     ListAgg(ListAgg),
     /// The `ARRAY_AGG` function `SELECT ARRAY_AGG(... ORDER BY ...)`
     ArrayAgg(ArrayAgg),
+    /// The `WITHIN GROUP` expr `... WITHIN GROUP (ORDER BY ...)`
+    WithinGroup(WithinGroup),
     /// The `GROUPING SETS` expr.
     GroupingSets(Vec<Vec<Expr>>),
     /// The `CUBE` expr.
@@ -549,6 +551,7 @@ impl fmt::Display for Expr {
             Expr::ArraySubquery(s) => write!(f, "ARRAY({})", s),
             Expr::ListAgg(listagg) => write!(f, "{}", listagg),
             Expr::ArrayAgg(arrayagg) => write!(f, "{}", arrayagg),
+            Expr::WithinGroup(withingroup) => write!(f, "{}", withingroup),
             Expr::GroupingSets(sets) => {
                 write!(f, "GROUPING SETS (")?;
                 let mut sep = "";
@@ -2420,7 +2423,6 @@ pub struct ListAgg {
     pub expr: Box<Expr>,
     pub separator: Option<Box<Expr>>,
     pub on_overflow: Option<ListAggOnOverflow>,
-    pub within_group: Vec<OrderByExpr>,
 }
 
 impl fmt::Display for ListAgg {
@@ -2438,13 +2440,6 @@ impl fmt::Display for ListAgg {
             write!(f, "{}", on_overflow)?;
         }
         write!(f, ")")?;
-        if !self.within_group.is_empty() {
-            write!(
-                f,
-                " WITHIN GROUP (ORDER BY {})",
-                display_comma_separated(&self.within_group)
-            )?;
-        }
         Ok(())
     }
 }
@@ -2494,7 +2489,6 @@ pub struct ArrayAgg {
     pub expr: Box<Expr>,
     pub order_by: Option<Box<OrderByExpr>>,
     pub limit: Option<Box<Expr>>,
-    pub within_group: bool, // order by is used inside a within group or not
 }
 
 impl fmt::Display for ArrayAgg {
@@ -2505,20 +2499,33 @@ impl fmt::Display for ArrayAgg {
             if self.distinct { "DISTINCT " } else { "" },
             self.expr
         )?;
-        if !self.within_group {
-            if let Some(order_by) = &self.order_by {
-                write!(f, " ORDER BY {}", order_by)?;
-            }
-            if let Some(limit) = &self.limit {
-                write!(f, " LIMIT {}", limit)?;
-            }
+        if let Some(order_by) = &self.order_by {
+            write!(f, " ORDER BY {}", order_by)?;
+        }
+        if let Some(limit) = &self.limit {
+            write!(f, " LIMIT {}", limit)?;
         }
         write!(f, ")")?;
-        if self.within_group {
-            if let Some(order_by) = &self.order_by {
-                write!(f, " WITHIN GROUP (ORDER BY {})", order_by)?;
-            }
-        }
+        Ok(())
+    }
+}
+
+/// A `WITHIN GROUP` invocation `<expr> WITHIN GROUP (ORDER BY <sort_expr> )`
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct WithinGroup {
+    pub expr: Box<Expr>,
+    pub order_by: Vec<OrderByExpr>,
+}
+
+impl fmt::Display for WithinGroup {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} WITHIN GROUP (ORDER BY {})",
+            self.expr,
+            display_comma_separated(&self.order_by),
+        )?;
         Ok(())
     }
 }
