@@ -2423,7 +2423,6 @@ pub struct ListAgg {
     pub expr: Box<Expr>,
     pub separator: Option<Box<Expr>>,
     pub on_overflow: Option<ListAggOnOverflow>,
-    pub within_group: Vec<OrderByExpr>,
 }
 
 impl fmt::Display for ListAgg {
@@ -2441,13 +2440,6 @@ impl fmt::Display for ListAgg {
             write!(f, "{}", on_overflow)?;
         }
         write!(f, ")")?;
-        if !self.within_group.is_empty() {
-            write!(
-                f,
-                " WITHIN GROUP (ORDER BY {})",
-                display_comma_separated(&self.within_group)
-            )?;
-        }
         Ok(())
     }
 }
@@ -2497,7 +2489,6 @@ pub struct ArrayAgg {
     pub expr: Box<Expr>,
     pub order_by: Option<Box<OrderByExpr>>,
     pub limit: Option<Box<Expr>>,
-    pub within_group: bool, // order by is used inside a within group or not
 }
 
 impl fmt::Display for ArrayAgg {
@@ -2508,20 +2499,13 @@ impl fmt::Display for ArrayAgg {
             if self.distinct { "DISTINCT " } else { "" },
             self.expr
         )?;
-        if !self.within_group {
-            if let Some(order_by) = &self.order_by {
-                write!(f, " ORDER BY {}", order_by)?;
-            }
-            if let Some(limit) = &self.limit {
-                write!(f, " LIMIT {}", limit)?;
-            }
+        if let Some(order_by) = &self.order_by {
+            write!(f, " ORDER BY {}", order_by)?;
+        }
+        if let Some(limit) = &self.limit {
+            write!(f, " LIMIT {}", limit)?;
         }
         write!(f, ")")?;
-        if self.within_group {
-            if let Some(order_by) = &self.order_by {
-                write!(f, " WITHIN GROUP (ORDER BY {})", order_by)?;
-            }
-        }
         Ok(())
     }
 }

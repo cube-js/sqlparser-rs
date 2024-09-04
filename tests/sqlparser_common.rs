@@ -1702,14 +1702,16 @@ fn parse_listagg() {
         },
     ];
     assert_eq!(
-        &Expr::ListAgg(ListAgg {
-            distinct: true,
-            expr,
-            separator: Some(Box::new(Expr::Value(Value::SingleQuotedString(
-                ", ".to_string()
-            )))),
-            on_overflow,
-            within_group
+        &Expr::WithinGroup(WithinGroup {
+            expr: Box::new(Expr::ListAgg(ListAgg {
+                distinct: true,
+                expr,
+                separator: Some(Box::new(Expr::Value(Value::SingleQuotedString(
+                    ", ".to_string()
+                )))),
+                on_overflow,
+            })),
+            order_by: within_group
         }),
         expr_from_projection(only(&select.projection))
     );
