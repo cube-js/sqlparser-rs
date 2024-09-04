@@ -627,14 +627,33 @@ impl<'a> Parser<'a> {
             None
         };
 
-        Ok(Expr::Function(Function {
+        let within_group = if self.parse_keywords(&[Keyword::WITHIN, Keyword::GROUP]) {
+            self.expect_token(&Token::LParen)?;
+            self.expect_keywords(&[Keyword::ORDER, Keyword::BY])?;
+            let order_by_expr = self.parse_comma_separated(Parser::parse_order_by_expr)?;
+            self.expect_token(&Token::RParen)?;
+            Some(order_by_expr)
+        } else {
+            None
+        };
+
+        let function = Expr::Function(Function {
             name,
             args,
             over,
             distinct,
             special: false,
             approximate: false,
-        }))
+        });
+
+        Ok(if let Some(within_group) = within_group {
+            Expr::WithinGroup(WithinGroup {
+                expr: Box::new(function),
+                order_by: within_group,
+            })
+        } else {
+            function
+        })
     }
 
     pub fn parse_time_functions(&mut self, name: ObjectName) -> Result<Expr, ParserError> {

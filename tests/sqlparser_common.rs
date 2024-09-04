@@ -1737,6 +1737,41 @@ fn parse_array_agg_func() {
 }
 
 #[test]
+fn parse_within_group() {
+    let sql = "SELECT PERCENTILE_CONT(0.0) WITHIN GROUP (ORDER BY name ASC NULLS FIRST)";
+    let select = verified_only_select(sql);
+
+    #[cfg(feature = "bigdecimal")]
+    let value = bigdecimal::BigDecimal::from(0);
+    #[cfg(not(feature = "bigdecimal"))]
+    let value = "0.0".to_string();
+    let expr = Expr::Value(Value::Number(value, false));
+    let function = Expr::Function(Function {
+        name: ObjectName(vec![Ident::new("PERCENTILE_CONT")]),
+        args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))],
+        over: None,
+        distinct: false,
+        special: false,
+        approximate: false,
+    });
+    let within_group = vec![OrderByExpr {
+        expr: Expr::Identifier(Ident {
+            value: "name".to_string(),
+            quote_style: None,
+        }),
+        asc: Some(true),
+        nulls_first: Some(true),
+    }];
+    assert_eq!(
+        &Expr::WithinGroup(WithinGroup {
+            expr: Box::new(function),
+            order_by: within_group
+        }),
+        expr_from_projection(only(&select.projection))
+    );
+}
+
+#[test]
 fn parse_create_table() {
     let sql = "CREATE TABLE uk_cities (\
                name VARCHAR(100) NOT NULL,\

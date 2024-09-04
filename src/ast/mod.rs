@@ -348,6 +348,8 @@ pub enum Expr {
     ListAgg(ListAgg),
     /// The `ARRAY_AGG` function `SELECT ARRAY_AGG(... ORDER BY ...)`
     ArrayAgg(ArrayAgg),
+    /// The `WITHIN GROUP` expr `... WITHIN GROUP (ORDER BY ...)`
+    WithinGroup(WithinGroup),
     /// The `GROUPING SETS` expr.
     GroupingSets(Vec<Vec<Expr>>),
     /// The `CUBE` expr.
@@ -549,6 +551,7 @@ impl fmt::Display for Expr {
             Expr::ArraySubquery(s) => write!(f, "ARRAY({})", s),
             Expr::ListAgg(listagg) => write!(f, "{}", listagg),
             Expr::ArrayAgg(arrayagg) => write!(f, "{}", arrayagg),
+            Expr::WithinGroup(withingroup) => write!(f, "{}", withingroup),
             Expr::GroupingSets(sets) => {
                 write!(f, "GROUPING SETS (")?;
                 let mut sep = "";
@@ -2519,6 +2522,26 @@ impl fmt::Display for ArrayAgg {
                 write!(f, " WITHIN GROUP (ORDER BY {})", order_by)?;
             }
         }
+        Ok(())
+    }
+}
+
+/// A `WITHIN GROUP` invocation `<expr> WITHIN GROUP (ORDER BY <sort_expr> )`
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct WithinGroup {
+    pub expr: Box<Expr>,
+    pub order_by: Vec<OrderByExpr>,
+}
+
+impl fmt::Display for WithinGroup {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} WITHIN GROUP (ORDER BY {})",
+            self.expr,
+            display_comma_separated(&self.order_by),
+        )?;
         Ok(())
     }
 }
