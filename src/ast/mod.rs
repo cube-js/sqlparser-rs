@@ -6170,6 +6170,8 @@ pub enum ObjectType {
     Sequence,
     Stage,
     Type,
+    // CubeStore extension.
+    PartitionedIndex,
 }
 
 impl fmt::Display for ObjectType {
@@ -6184,6 +6186,7 @@ impl fmt::Display for ObjectType {
             ObjectType::Sequence => "SEQUENCE",
             ObjectType::Stage => "STAGE",
             ObjectType::Type => "TYPE",
+            ObjectType::PartitionedIndex => "PARTITIONED INDEX",
         })
     }
 }

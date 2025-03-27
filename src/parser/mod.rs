@@ -5551,6 +5551,8 @@ impl<'a> Parser<'a> {
             ObjectType::Schema
         } else if self.parse_keyword(Keyword::DATABASE) {
             ObjectType::Database
+        } else if self.parse_keywords(&[Keyword::PARTITIONED, Keyword::INDEX]) {
+            ObjectType::PartitionedIndex
         } else if self.parse_keyword(Keyword::SEQUENCE) {
             ObjectType::Sequence
         } else if self.parse_keyword(Keyword::STAGE) {
@@ -5571,7 +5573,7 @@ impl<'a> Parser<'a> {
             return self.parse_drop_extension();
         } else {
             return self.expected(
-                "DATABASE, EXTENSION, FUNCTION, INDEX, POLICY, PROCEDURE, ROLE, SCHEMA, SECRET, SEQUENCE, STAGE, TABLE, TRIGGER, TYPE, or VIEW after DROP",
+                "DATABASE, EXTENSION, FUNCTION, INDEX, PARTITIONED INDEX, POLICY, PROCEDURE, ROLE, SCHEMA, SECRET, SEQUENCE, STAGE, TABLE, TRIGGER, TYPE, or VIEW after DROP",
                 self.peek_token(),
             );
         };
