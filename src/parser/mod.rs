@@ -4739,6 +4739,8 @@ impl<'a> Parser<'a> {
             ObjectType::Role
         } else if self.parse_keyword(Keyword::SCHEMA) {
             ObjectType::Schema
+        } else if self.parse_keywords(&[Keyword::PARTITIONED, Keyword::INDEX]) {
+            ObjectType::PartitionedIndex
         } else if self.parse_keyword(Keyword::SEQUENCE) {
             ObjectType::Sequence
         } else if self.parse_keyword(Keyword::STAGE) {
@@ -4753,7 +4755,7 @@ impl<'a> Parser<'a> {
             return self.parse_drop_trigger();
         } else {
             return self.expected(
-                "TABLE, VIEW, INDEX, ROLE, SCHEMA, FUNCTION, PROCEDURE, STAGE, TRIGGER, SECRET or SEQUENCE after DROP",
+                "TABLE, VIEW, INDEX, PARTITIONED INDEX, ROLE, SCHEMA, FUNCTION, PROCEDURE, STAGE, TRIGGER, SECRET or SEQUENCE after DROP",
                 self.peek_token(),
             );
         };
