@@ -395,6 +395,12 @@ impl Spanned for Statement {
                     .chain(module_args.iter().map(|i| i.span)),
             ),
             Statement::CreateIndex(create_index) => create_index.span(),
+            // Cubestore extension.
+            Statement::CreatePartitionedIndex {
+                name: _,
+                columns: _,
+                if_not_exists: _,
+            } => Span::empty(),  // Not implemented -- maybe if_not_exists being a naked bool is an issue.
             Statement::CreateRole { .. } => Span::empty(),
             Statement::CreateSecret { .. } => Span::empty(),
             Statement::AlterTable {

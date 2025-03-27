@@ -2555,6 +2555,12 @@ pub enum Statement {
     /// `CREATE INDEX`
     /// ```
     CreateIndex(CreateIndex),
+    // Cubestore extension.
+    CreatePartitionedIndex {
+        name: ObjectName,
+        columns: Vec<ColumnDef>,
+        if_not_exists: bool,
+    },
     /// ```sql
     /// CREATE ROLE
     /// ```
@@ -5063,6 +5069,19 @@ impl fmt::Display for Statement {
                     write!(f, " {deduplicate}")?;
                 }
                 Ok(())
+            }
+            Statement::CreatePartitionedIndex {
+                name,
+                columns,
+                if_not_exists,
+            } => {
+                write!(
+                    f,
+                    "CREATE PARTITIONED INDEX{} {}({})",
+                    if *if_not_exists { " IF NOT EXISTS" } else { "" },
+                    name,
+                    display_comma_separated(&columns)
+                )
             }
             Statement::LISTEN { channel } => {
                 write!(f, "LISTEN {channel}")?;
