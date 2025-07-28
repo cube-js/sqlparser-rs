@@ -48,7 +48,7 @@ jobs:
   test:
     strategy:
       matrix:
-        rust: [stable, beta, nightly, nightly-2022-03-22]
+        rust: [stable, beta, nightly]
     runs-on: ubuntu-22.04
     steps:
     - name: Setup Rust
