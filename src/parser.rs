@@ -496,7 +496,17 @@ impl<'a> Parser<'a> {
                             }
                         }
 
-                        if self.consume_token(&Token::LParen) {
+                        #[cfg(feature = "std")]
+                        let is_array_agg = dialect_of!(self is PostgreSqlDialect | GenericDialect)
+                            && id_parts.len() == 2
+                            && id_parts[0].value.eq_ignore_ascii_case("pg_catalog")
+                            && id_parts[1].value.eq_ignore_ascii_case("array_agg");
+                        #[cfg(not(feature = "std"))]
+                        let is_array_agg = false;
+
+                        if is_array_agg {
+                            self.parse_array_agg_expr()
+                        } else if self.consume_token(&Token::LParen) {
                             self.prev_token();
                             self.parse_function(ObjectName(id_parts))
                         } else {
