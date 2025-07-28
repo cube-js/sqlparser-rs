@@ -3658,6 +3658,7 @@ fn parse_union() {
     // TODO: add assertions
     verified_stmt("SELECT 1 UNION SELECT 2");
     verified_stmt("SELECT 1 UNION ALL SELECT 2");
+    verified_stmt("SELECT 1 UNION DISTINCT SELECT 2");
     verified_stmt("SELECT 1 EXCEPT SELECT 2");
     verified_stmt("SELECT 1 EXCEPT ALL SELECT 2");
     verified_stmt("SELECT 1 INTERSECT SELECT 2");

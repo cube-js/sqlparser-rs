@@ -78,7 +78,7 @@ pub enum SetExpr {
     /// UNION/EXCEPT/INTERSECT of two queries
     SetOperation {
         op: SetOperator,
-        all: bool,
+        option: Option<SetOperatorOption>,
         left: Box<SetExpr>,
         right: Box<SetExpr>,
     },
@@ -98,10 +98,13 @@ impl fmt::Display for SetExpr {
                 left,
                 right,
                 op,
-                all,
+                option,
             } => {
-                let all_str = if *all { " ALL" } else { "" };
-                write!(f, "{} {}{} {}", left, op, all_str, right)
+                let option_str = option
+                    .as_ref()
+                    .map(|option| format!(" {}", option))
+                    .unwrap_or_else(|| "".to_string());
+                write!(f, "{} {}{} {}", left, op, option_str, right)
             }
         }
     }
@@ -121,6 +124,22 @@ impl fmt::Display for SetOperator {
             SetOperator::Union => "UNION",
             SetOperator::Except => "EXCEPT",
             SetOperator::Intersect => "INTERSECT",
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum SetOperatorOption {
+    All,
+    Distinct,
+}
+
+impl fmt::Display for SetOperatorOption {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(match self {
+            SetOperatorOption::All => "ALL",
+            SetOperatorOption::Distinct => "DISTINCT",
         })
     }
 }

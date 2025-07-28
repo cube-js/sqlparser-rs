@@ -1272,7 +1272,7 @@ fn parse_array_subquery_expr() {
             with: None,
             body: SetExpr::SetOperation {
                 op: SetOperator::Union,
-                all: false,
+                option: None,
                 left: Box::new(SetExpr::Select(Box::new(Select {
                     distinct: false,
                     top: None,
