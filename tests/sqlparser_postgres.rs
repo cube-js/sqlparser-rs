@@ -1363,6 +1363,18 @@ fn test_savepoint() {
 }
 
 #[test]
+fn test_release() {
+    match pg().verified_stmt("RELEASE test1") {
+        Statement::Release { name } => {
+            assert_eq!(Ident::new("test1"), name);
+        }
+        _ => unreachable!(),
+    }
+
+    pg_and_generic().one_statement_parses_to("RELEASE SAVEPOINT foo", "RELEASE foo");
+}
+
+#[test]
 fn parse_comments() {
     match pg().verified_stmt("COMMENT ON COLUMN tab.name IS 'comment'") {
         Statement::Comment {

@@ -4474,12 +4474,28 @@ fn parse_commit() {
 #[test]
 fn parse_rollback() {
     match verified_stmt("ROLLBACK") {
-        Statement::Rollback { chain: false } => (),
+        Statement::Rollback {
+            savepoint: None,
+            chain: false,
+        } => (),
         _ => unreachable!(),
     }
 
     match verified_stmt("ROLLBACK AND CHAIN") {
-        Statement::Rollback { chain: true } => (),
+        Statement::Rollback {
+            savepoint: None,
+            chain: true,
+        } => (),
+        _ => unreachable!(),
+    }
+
+    match verified_stmt("ROLLBACK TO foo") {
+        Statement::Rollback {
+            savepoint: Some(ident),
+            chain: false,
+        } => {
+            assert_eq!(ident.value, "foo")
+        }
         _ => unreachable!(),
     }
 
@@ -4490,6 +4506,11 @@ fn parse_rollback() {
     one_statement_parses_to("ROLLBACK TRANSACTION AND CHAIN", "ROLLBACK AND CHAIN");
     one_statement_parses_to("ROLLBACK WORK", "ROLLBACK");
     one_statement_parses_to("ROLLBACK TRANSACTION", "ROLLBACK");
+    one_statement_parses_to("ROLLBACK WORK TO foo", "ROLLBACK TO foo");
+    one_statement_parses_to("ROLLBACK TRANSACTION TO foo", "ROLLBACK TO foo");
+    one_statement_parses_to("ROLLBACK TO SAVEPOINT foo", "ROLLBACK TO foo");
+    one_statement_parses_to("ROLLBACK WORK TO SAVEPOINT foo", "ROLLBACK TO foo");
+    one_statement_parses_to("ROLLBACK TRANSACTION TO SAVEPOINT foo", "ROLLBACK TO foo");
 }
 
 #[test]
