@@ -186,6 +186,7 @@ impl<'a> Parser<'a> {
                 // by at least PostgreSQL and MySQL.
                 Keyword::BEGIN => Ok(self.parse_begin()?),
                 Keyword::SAVEPOINT => Ok(self.parse_savepoint()?),
+                Keyword::RELEASE => Ok(self.parse_release()?),
                 Keyword::COMMIT => Ok(self.parse_commit()?),
                 Keyword::ROLLBACK => Ok(self.parse_rollback()?),
                 Keyword::ASSERT => Ok(self.parse_assert()?),
@@ -388,6 +389,12 @@ impl<'a> Parser<'a> {
     pub fn parse_savepoint(&mut self) -> Result<Statement, ParserError> {
         let name = self.parse_identifier()?;
         Ok(Statement::Savepoint { name })
+    }
+
+    pub fn parse_release(&mut self) -> Result<Statement, ParserError> {
+        let _ = self.parse_keyword(Keyword::SAVEPOINT);
+        let name = self.parse_identifier()?;
+        Ok(Statement::Release { name })
     }
 
     /// Parse an expression prefix
@@ -4654,19 +4661,27 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_commit(&mut self) -> Result<Statement, ParserError> {
+        let _ = self.parse_one_of_keywords(&[Keyword::TRANSACTION, Keyword::WORK]);
         Ok(Statement::Commit {
             chain: self.parse_commit_rollback_chain()?,
         })
     }
 
     pub fn parse_rollback(&mut self) -> Result<Statement, ParserError> {
+        let _ = self.parse_one_of_keywords(&[Keyword::TRANSACTION, Keyword::WORK]);
+        let savepoint = if self.parse_keyword(Keyword::TO) {
+            let _ = self.parse_keyword(Keyword::SAVEPOINT);
+            Some(self.parse_identifier()?)
+        } else {
+            None
+        };
         Ok(Statement::Rollback {
+            savepoint,
             chain: self.parse_commit_rollback_chain()?,
         })
     }
 
     pub fn parse_commit_rollback_chain(&mut self) -> Result<bool, ParserError> {
-        let _ = self.parse_one_of_keywords(&[Keyword::TRANSACTION, Keyword::WORK]);
         if self.parse_keyword(Keyword::AND) {
             let chain = !self.parse_keyword(Keyword::NO);
             self.expect_keyword(Keyword::CHAIN)?;

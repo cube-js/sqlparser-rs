@@ -1106,7 +1106,11 @@ pub enum Statement {
     /// `COMMIT [ TRANSACTION | WORK ] [ AND [ NO ] CHAIN ]`
     Commit { chain: bool },
     /// `ROLLBACK [ TRANSACTION | WORK ] [ AND [ NO ] CHAIN ]`
-    Rollback { chain: bool },
+    /// `ROLLBACK [ TRANSACTION | WORK ] TO [ SAVEPOINT ] name`
+    Rollback {
+        savepoint: Option<Ident>,
+        chain: bool,
+    },
     /// CREATE SCHEMA
     CreateSchema {
         schema_name: ObjectName,
@@ -1184,6 +1188,8 @@ pub enum Statement {
     },
     /// SAVEPOINT -- define a new savepoint within the current transaction
     Savepoint { name: Ident },
+    /// RELEASE -- release a previously defined savepoint
+    Release { name: Ident },
     // MERGE INTO statement, based on Snowflake. See <https://docs.snowflake.com/en/sql-reference/sql/merge.html>
     Merge {
         // Specifies the table to merge
@@ -1956,8 +1962,17 @@ impl fmt::Display for Statement {
             Statement::Commit { chain } => {
                 write!(f, "COMMIT{}", if *chain { " AND CHAIN" } else { "" },)
             }
-            Statement::Rollback { chain } => {
-                write!(f, "ROLLBACK{}", if *chain { " AND CHAIN" } else { "" },)
+            Statement::Rollback { savepoint, chain } => {
+                write!(
+                    f,
+                    "ROLLBACK{}{}",
+                    if let Some(savepoint) = savepoint {
+                        format!(" TO {}", savepoint)
+                    } else {
+                        "".to_string()
+                    },
+                    if *chain { " AND CHAIN" } else { "" },
+                )
             }
             Statement::CreateSchema {
                 schema_name,
@@ -2047,6 +2062,10 @@ impl fmt::Display for Statement {
             }
             Statement::Savepoint { name } => {
                 write!(f, "SAVEPOINT ")?;
+                write!(f, "{}", name)
+            }
+            Statement::Release { name } => {
+                write!(f, "RELEASE ")?;
                 write!(f, "{}", name)
             }
             Statement::Merge {
