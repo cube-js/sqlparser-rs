@@ -950,6 +950,45 @@ fn parse_set_role() {
 }
 
 #[test]
+fn parse_set_time_zone() {
+    let stmt = pg().verified_stmt("SET SESSION TIME ZONE DEFAULT");
+    assert_eq!(
+        stmt,
+        Statement::SetTimeZone {
+            local: false,
+            session: true,
+            timezone: Expr::Identifier(Ident {
+                value: "DEFAULT".to_string(),
+                quote_style: None,
+            }),
+        }
+    );
+
+    let stmt = pg().verified_stmt("SET LOCAL TIME ZONE 'Europe/Rome'");
+    assert_eq!(
+        stmt,
+        Statement::SetTimeZone {
+            local: true,
+            session: false,
+            timezone: Expr::Value(Value::SingleQuotedString("Europe/Rome".to_string())),
+        }
+    );
+
+    let stmt = pg().verified_stmt("SET TIME ZONE LOCAL");
+    assert_eq!(
+        stmt,
+        Statement::SetTimeZone {
+            local: false,
+            session: false,
+            timezone: Expr::Identifier(Ident {
+                value: "LOCAL".to_string(),
+                quote_style: None,
+            }),
+        }
+    );
+}
+
+#[test]
 fn parse_show() {
     let stmt = pg_and_generic().verified_stmt("SHOW a a");
     assert_eq!(
