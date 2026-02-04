@@ -3769,6 +3769,19 @@ impl<'a> Parser<'a> {
             });
         }
 
+        if dialect_of!(self is PostgreSqlDialect | RedshiftSqlDialect)
+            && self.parse_keywords(&[Keyword::TIME, Keyword::ZONE])
+        {
+            let local = modifier == Some(Keyword::LOCAL);
+            let session = modifier == Some(Keyword::SESSION);
+            let timezone = self.parse_expr()?;
+            return Ok(Statement::SetTimeZone {
+                local,
+                session,
+                timezone,
+            });
+        }
+
         let mut key_values: Vec<SetVariableKeyValue> = vec![];
 
         if dialect_of!(self is PostgreSqlDialect | RedshiftSqlDialect) {

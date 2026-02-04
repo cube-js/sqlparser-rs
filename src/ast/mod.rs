@@ -1045,6 +1045,16 @@ pub enum Statement {
         charset_name: String,
         collation_name: Option<String>,
     },
+    /// SET [ SESSION | LOCAL ] TIME ZONE timezone
+    ///
+    /// Note: this is a PostgreSQL-specific statement,
+    /// but may also compatible with other SQL.
+    SetTimeZone {
+        local: bool,
+        // SESSION is the default if neither SESSION nor LOCAL appears.
+        session: bool,
+        timezone: Expr,
+    },
     /// SHOW <variable>
     ///
     /// Note: this is a PostgreSQL-specific statement.
@@ -1848,6 +1858,20 @@ impl fmt::Display for Statement {
                 };
 
                 Ok(())
+            }
+            Statement::SetTimeZone {
+                local,
+                session,
+                timezone,
+            } => {
+                let modifier = if *local {
+                    "LOCAL "
+                } else if *session {
+                    "SESSION "
+                } else {
+                    ""
+                };
+                write!(f, "SET {}TIME ZONE {}", modifier, timezone)
             }
             Statement::ShowVariable { variable } => {
                 write!(f, "SHOW")?;
