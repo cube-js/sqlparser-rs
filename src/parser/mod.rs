@@ -1533,6 +1533,7 @@ impl<'a> Parser<'a> {
                         filter: None,
                         over: None,
                         within_group: vec![],
+                        approximate: false,
                     })))
                 }
             Keyword::CURRENT_TIMESTAMP
@@ -1595,6 +1596,7 @@ impl<'a> Parser<'a> {
                         null_treatment: None,
                         over: None,
                         within_group: vec![],
+                        approximate: false,
                     })))
                 }
             Keyword::NOT => Ok(Some(self.parse_not()?)),
@@ -1777,6 +1779,31 @@ impl<'a> Parser<'a> {
         })?;
 
         if let Some(expr) = opt_expr {
+            return Ok(expr);
+        }
+
+        // Redshift `APPROXIMATE <function>` option, e.g. `APPROXIMATE COUNT(DISTINCT x)`
+        // or `APPROXIMATE PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY x)`. The keyword is
+        // only meaningful immediately before a function call, so we require a following
+        // `<word> (` to avoid treating a bare `approximate` identifier as this option.
+        if dialect_of!(self is RedshiftSqlDialect | PostgreSqlDialect | GenericDialect)
+            && matches!(
+                self.peek_tokens(),
+                [
+                    Token::Word(Word {
+                        keyword: Keyword::APPROXIMATE,
+                        ..
+                    }),
+                    Token::Word(_),
+                    Token::LParen,
+                ]
+            )
+        {
+            self.expect_keyword_is(Keyword::APPROXIMATE)?;
+            let mut expr = self.parse_prefix()?;
+            if let Expr::Function(func) = &mut expr {
+                func.approximate = true;
+            }
             return Ok(expr);
         }
 
@@ -2455,6 +2482,7 @@ impl<'a> Parser<'a> {
                 null_treatment: None,
                 over: None,
                 within_group: vec![],
+                approximate: false,
             });
         }
 
@@ -2523,6 +2551,7 @@ impl<'a> Parser<'a> {
             filter,
             over,
             within_group,
+            approximate: false,
         })
     }
 
@@ -2558,6 +2587,7 @@ impl<'a> Parser<'a> {
             over: None,
             null_treatment: None,
             within_group: vec![],
+            approximate: false,
         }))
     }
 
@@ -11514,6 +11544,7 @@ impl<'a> Parser<'a> {
                 filter: None,
                 null_treatment: None,
                 within_group: vec![],
+                approximate: false,
             }))
         }
     }

@@ -1739,6 +1739,7 @@ impl Spanned for Function {
             null_treatment: _, // enum
             over: _,           // todo
             within_group,
+            approximate: _,
         } = self;
 
         union_spans(

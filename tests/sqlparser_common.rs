@@ -1367,7 +1367,8 @@ fn parse_select_count_wildcard() {
             null_treatment: None,
             filter: None,
             over: None,
-            within_group: vec![]
+            within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -1392,6 +1393,7 @@ fn parse_select_count_distinct() {
             }),
             null_treatment: None,
             within_group: vec![],
+            approximate: false,
             filter: None,
             over: None
         }),
@@ -2997,7 +2999,8 @@ fn parse_select_having() {
                 null_treatment: None,
                 filter: None,
                 over: None,
-                within_group: vec![]
+                within_group: vec![],
+                approximate: false,
             })),
             op: BinaryOperator::Gt,
             right: Box::new(Expr::value(number("1"))),
@@ -3040,7 +3043,8 @@ fn parse_select_qualify() {
                     }],
                     window_frame: None,
                 })),
-                within_group: vec![]
+                within_group: vec![],
+                approximate: false,
             })),
             op: BinaryOperator::Eq,
             right: Box::new(Expr::value(number("1"))),
@@ -3499,7 +3503,8 @@ fn parse_listagg() {
                     },
                     with_fill: None,
                 },
-            ]
+            ],
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -5648,7 +5653,8 @@ fn parse_named_argument_function() {
             null_treatment: None,
             filter: None,
             over: None,
-            within_group: vec![]
+            within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -5689,6 +5695,7 @@ fn parse_named_argument_function_with_eq_operator() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection))
     );
@@ -5761,6 +5768,7 @@ fn parse_window_functions() {
                 window_frame: None,
             })),
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -5901,6 +5909,7 @@ fn test_parse_named_window() {
                         span: Span::empty(),
                     })),
                     within_group: vec![],
+                    approximate: false,
                 }),
                 alias: Ident {
                     value: "min1".to_string(),
@@ -5936,6 +5945,7 @@ fn test_parse_named_window() {
                         span: Span::empty(),
                     })),
                     within_group: vec![],
+                    approximate: false,
                 }),
                 alias: Ident {
                     value: "max1".to_string(),
@@ -10639,6 +10649,7 @@ fn parse_time_functions() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         };
         assert_eq!(
             &Expr::Function(select_localtime_func_call_ast.clone()),
@@ -12274,6 +12285,7 @@ fn parse_call() {
             null_treatment: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         })
     );
 }
@@ -12743,6 +12755,7 @@ fn parse_map_access_expr() {
                     null_treatment: None,
                     over: None,
                     within_group: vec![],
+                    approximate: false,
                     uses_odbc_syntax: false,
                 }),
             }),
@@ -13084,6 +13097,7 @@ fn test_selective_aggregation() {
                 ))))),
                 over: None,
                 within_group: vec![],
+                approximate: false,
                 null_treatment: None
             })),
             SelectItem::ExprWithAlias {
@@ -13109,7 +13123,8 @@ fn test_selective_aggregation() {
                     })),
                     null_treatment: None,
                     over: None,
-                    within_group: vec![]
+                    within_group: vec![],
+                    approximate: false,
                 }),
                 alias: Ident::new("agg2")
             },
@@ -15531,7 +15546,8 @@ fn parse_composite_access_expr() {
                 null_treatment: None,
                 filter: None,
                 over: None,
-                within_group: vec![]
+                within_group: vec![],
+                approximate: false,
             })),
             access_chain: vec![AccessExpr::Dot(Expr::Identifier(Ident::new("b")))]
         }
@@ -15555,7 +15571,8 @@ fn parse_composite_access_expr() {
                 null_treatment: None,
                 filter: None,
                 over: None,
-                within_group: vec![]
+                within_group: vec![],
+                approximate: false,
             })),
             access_chain: vec![
                 AccessExpr::Dot(Expr::Identifier(Ident::new("b"))),
@@ -15582,6 +15599,7 @@ fn parse_composite_access_expr() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         })),
         access_chain: vec![AccessExpr::Dot(Expr::Identifier(Ident::new("b")))],
     };

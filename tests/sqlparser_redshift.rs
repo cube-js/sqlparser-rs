@@ -148,6 +148,7 @@ fn parse_delimited_identifiers() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[1]),
     );

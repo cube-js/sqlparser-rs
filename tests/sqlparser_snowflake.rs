@@ -548,6 +548,7 @@ fn test_snowflake_create_table_cluster_by() {
                         null_treatment: None,
                         over: None,
                         within_group: vec![],
+                        approximate: false,
                     }),
                 ])),
                 cluster_by
@@ -1448,6 +1449,7 @@ fn parse_delimited_identifiers() {
             null_treatment: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[1]),
     );
@@ -1667,7 +1669,8 @@ fn test_alter_table_clustering() {
                         filter: None,
                         null_treatment: None,
                         over: None,
-                        within_group: vec![]
+                        within_group: vec![],
+                        approximate: false,
                     })
                 ],
             );

@@ -598,6 +598,7 @@ where
 ///           over: None,
 ///           parameters: FunctionArguments::None,
 ///           within_group: vec![],
+///           approximate: false,
 ///      });
 ///   }
 ///   ControlFlow::<()>::Continue(())

@@ -2946,6 +2946,7 @@ fn parse_create_indices_with_operator_classes() {
                         null_treatment: None,
                         over: None,
                         within_group: vec![],
+                        approximate: false,
                     }),
                     options: OrderByOptions {
                         asc: None,
@@ -3444,9 +3445,37 @@ fn parse_array_subquery_expr() {
             filter: None,
             null_treatment: None,
             over: None,
-            within_group: vec![]
+            within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(only(&select.projection)),
+    );
+}
+
+#[test]
+fn parse_approximate_function() {
+    // Redshift `APPROXIMATE COUNT(DISTINCT ...)`, see
+    // https://docs.aws.amazon.com/redshift/latest/dg/r_COUNT.html
+    let sql = "SELECT APPROXIMATE COUNT(DISTINCT x) FROM t";
+    let select = pg().verified_only_select(sql);
+    match expr_from_projection(only(&select.projection)) {
+        Expr::Function(func) => {
+            assert!(func.approximate);
+            assert_eq!(func.name.to_string(), "COUNT");
+        }
+        other => panic!("expected a function expression, got {other:?}"),
+    }
+
+    // `APPROXIMATE PERCENTILE_DISC(...) WITHIN GROUP (...)` round-trips too.
+    pg_and_generic()
+        .verified_stmt("SELECT APPROXIMATE PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY x) FROM t");
+
+    // `APPROXIMATE` is only an option immediately before a function call, so a
+    // bare `approximate` identifier is still parsed as a column name.
+    let select = pg().verified_only_select("SELECT approximate FROM t");
+    assert_eq!(
+        expr_from_projection(only(&select.projection)),
+        &Expr::Identifier(Ident::new("approximate"))
     );
 }
 
@@ -3888,6 +3917,7 @@ fn test_composite_value() {
                 filter: None,
                 over: None,
                 within_group: vec![],
+                approximate: false,
             })))),
             access_chain: vec![AccessExpr::Dot(Expr::Identifier(Ident::new("n")))],
         },
@@ -4074,6 +4104,7 @@ fn parse_current_functions() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[0])
     );
@@ -4087,6 +4118,7 @@ fn parse_current_functions() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[1])
     );
@@ -4100,6 +4132,7 @@ fn parse_current_functions() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[2])
     );
@@ -4113,6 +4146,7 @@ fn parse_current_functions() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[3])
     );
@@ -4565,6 +4599,7 @@ fn parse_delimited_identifiers() {
             filter: None,
             over: None,
             within_group: vec![],
+            approximate: false,
         }),
         expr_from_projection(&select.projection[1]),
     );

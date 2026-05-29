@@ -8092,10 +8092,16 @@ pub struct Function {
     /// <aggregate_function>(expression) WITHIN GROUP (ORDER BY key [ASC | DESC], ...)
     /// ```
     pub within_group: Vec<OrderByExpr>,
+    /// Redshift `APPROXIMATE` option for some functions, e.g.
+    /// `APPROXIMATE COUNT(DISTINCT x)`.
+    pub approximate: bool,
 }
 
 impl fmt::Display for Function {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.approximate {
+            write!(f, "APPROXIMATE ")?;
+        }
         if self.uses_odbc_syntax {
             write!(f, "{{fn ")?;
         }
